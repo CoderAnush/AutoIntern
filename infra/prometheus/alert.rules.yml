@@ -1,0 +1,20 @@
+groups:
+  - name: autointern.rules
+    rules:
+      - alert: HighDLQSize
+        expr: worker_dlq_size > 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DLQ list has more than 5 items"
+          description: "The DLQ size is {{ $value }}. Check DLQ and worker failures."
+
+      - alert: WorkerFailureSpike
+        expr: increase(worker_processed_total{result="failure"}[5m]) > 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Worker failure rate detected"
+          description: "Worker processed failures increased in the last 5 minutes."

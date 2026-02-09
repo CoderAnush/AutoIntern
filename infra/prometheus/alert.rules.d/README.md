@@ -1,0 +1,1 @@
+Drop-in alerts can be added here as additional .yml files; they will be included by Prometheus via `rule_files`.
