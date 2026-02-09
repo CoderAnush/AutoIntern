@@ -33,8 +33,18 @@ async def process_once(redis):
     try:
         async with AsyncSessionLocal() as db:
             await process_message(message, db, elastic_url=ELASTIC_URL)
+        try:
+            from metrics import PROCESSED
+            PROCESSED.labels(result="success").inc()
+        except Exception:
+            pass
         return True
     except Exception as exc:
+        try:
+            from metrics import PROCESSED
+            PROCESSED.labels(result="failure").inc()
+        except Exception:
+            pass
         attempts += 1
         if attempts >= MAX_RETRIES:
             # Move to DLQ with error info

@@ -1,0 +1,18 @@
+{{ define "autointern.subject" }}
+[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}
+{{ end }}
+
+{{ define "autointern.body" }}
+Alert: {{ .CommonLabels.alertname }}
+Status: {{ .Status }}
+Severity: {{ .CommonLabels.severity }}
+
+Labels:
+{{ range $k, $v := .CommonLabels }} - {{ $k }}: {{ $v }}
+{{ end }}
+
+Annotations:
+{{ range $k, $v := .CommonAnnotations }} - {{ $k }}: {{ $v }}
+{{ end }}
+
+{{ end }}
