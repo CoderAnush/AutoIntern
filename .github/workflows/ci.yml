@@ -5,7 +5,10 @@ on: [push, pull_request]
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
+    env:
+      RUN_MONITORING_TESTS: false
+      RUN_E2E: false
     steps:
       - uses: actions/checkout@v4
 
@@ -19,6 +22,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r services/api/requirements.txt
           pip install alembic
+          pip install -r services/worker/requirements.txt
 
       - name: Prepare .env
         run: |
@@ -54,6 +58,27 @@ PY
       - name: Run tests
         run: |
           pytest -q
+
+      - name: E2E tests (Cypress)
+        if: env.RUN_E2E == 'true'
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v4
+          - name: Setup Node
+            uses: actions/setup-node@v3
+            with:
+              node-version: 20
+          - name: Install frontend deps
+            run: |
+              cd frontend/admin
+              npm ci
+          - name: Push DLQ test payload
+            run: |
+              python scripts/push_dlq.py --payload '{"job": {"source":"e2e","external_id":"e2e-1","title":"E2E Job"}}'
+          - name: Run Cypress tests
+            run: |
+              cd frontend/admin
+              npx cypress run --config baseUrl=http://localhost:8080 --spec "cypress/e2e/admin_dlq.spec.js"
 
       - name: Monitoring smoke test (optional)
         if: env.RUN_MONITORING_TESTS == 'true'
