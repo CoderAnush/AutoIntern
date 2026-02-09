@@ -1,6 +1,6 @@
 import asyncio
-import aioredis
 import pytest
+pytest.importorskip('aioredis')
 from app.db.session import AsyncSessionLocal
 from processor import process_message
 
@@ -8,6 +8,7 @@ REDIS_URL = "redis://localhost:6379"
 
 @pytest.mark.asyncio
 async def test_concurrent_inserts_dedup():
+    import aioredis
     try:
         r = aioredis.from_url(REDIS_URL)
         await r.ping()

@@ -1,7 +1,7 @@
 import asyncio
 import json
-import aioredis
 import pytest
+pytest.importorskip('aioredis')
 from app.db.session import AsyncSessionLocal
 from processor import process_message
 from worker import process_once, QUEUE_KEY, DLQ_KEY
@@ -10,6 +10,7 @@ REDIS_URL = "redis://localhost:6379"
 
 @pytest.mark.asyncio
 async def test_deduplication_inserts_once():
+    import aioredis
     try:
         r = aioredis.from_url(REDIS_URL)
         await r.ping()
@@ -33,6 +34,7 @@ async def test_deduplication_inserts_once():
 
 @pytest.mark.asyncio
 async def test_dlq_after_retries():
+    import aioredis
     try:
         r = aioredis.from_url(REDIS_URL)
         await r.ping()

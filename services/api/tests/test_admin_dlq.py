@@ -1,6 +1,6 @@
 import os
 import pytest
-import aioredis
+pytest.importorskip('aioredis')
 from fastapi.testclient import TestClient
 from services.api.app.main import app
 from app.core.config import settings
@@ -11,6 +11,7 @@ REDIS_URL = f"redis://{settings.redis_host}:{settings.redis_port}"
 @pytest.mark.skipif(not os.getenv('ADMIN_API_KEY'), reason='ADMIN_API_KEY not set')
 def test_list_and_requeue_delete(monkeypatch):
     # Ensure Redis available
+    import aioredis
     try:
         r = aioredis.from_url(REDIS_URL)
     except Exception:

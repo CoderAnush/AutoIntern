@@ -2,7 +2,7 @@ import asyncio
 import json
 import time
 import pytest
-import aioredis
+pytest.importorskip('aioredis')
 from app.db.session import AsyncSessionLocal
 from app.models.models import Job as JobModel
 from processor import process_message
@@ -13,6 +13,7 @@ QUEUE_KEY = "ingest:jobs"
 @pytest.mark.asyncio
 async def test_process_message_inserts_job():
     # Ensure Redis is available
+    import aioredis
     try:
         r = aioredis.from_url(REDIS_URL)
         await r.ping()
@@ -32,6 +33,7 @@ async def test_process_message_inserts_job():
 
 @pytest.mark.asyncio
 async def test_worker_consumes_from_redis_and_inserts():
+    import aioredis
     try:
         r = aioredis.from_url(REDIS_URL)
         await r.ping()
