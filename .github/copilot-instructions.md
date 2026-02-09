@@ -28,7 +28,7 @@ Goal: Help an AI coding agent be productive immediately in this monorepo by docu
 - Run API locally (without Docker): inside `services/api` create venv, `pip install -r requirements.txt`, then `uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`.
 - Tests: `pip install -r services/api/requirements.txt` then `pytest -q` from repo root. CI currently only runs `pytest`.
 - Scraper: `cd services/scraper` and `scrapy crawl <spider-name>`; Playwright-based spiders require `playwright install` in that environment.
-- DB migrations: Alembic is installed in requirements. When changing models add alembic revisions in `migrations/` and run `alembic upgrade head` in the appropriate environment.
+- DB migrations: Alembic is installed for the API service. Use the `services/api/alembic` setup and `services/api/alembic.ini` to manage migrations. Example from repo root: `cd services/api && alembic -c alembic.ini revision --autogenerate -m "msg" && alembic -c alembic.ini upgrade head`. For local convenience you can run `scripts/run_migrations.ps1`. In dev, set `MIGRATE_ON_START=true` in `.env` to have the API create tables on startup (not recommended for production).
 
 ## Project-specific conventions & patterns
 - Monorepo service layout: put service-specific Dockerfile and `requirements.txt` under `services/<name>/`.
