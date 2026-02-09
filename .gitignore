@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+venv/
+.env
+
+# Node
+node_modules/
+
+# Docker
+docker-compose.override.yml
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
