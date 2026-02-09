@@ -5,20 +5,26 @@ from app.models.models import Job as JobModel
 import httpx
 
 async def index_to_elasticsearch(job: JobModel, elastic_url: str):
-    # Placeholder: simple HTTP index request to Elasticsearch
+    # Robust HTTP index request to Elasticsearch with basic error handling
     async with httpx.AsyncClient() as client:
         try:
             doc = {
                 "id": str(job.id),
+                "external_id": job.external_id,
                 "title": job.title,
                 "description": job.description,
                 "location": job.location,
                 "source": job.source,
             }
             # Using a simple index API; in production use official client and index settings
-            await client.post(f"{elastic_url}/autointern-jobs/_doc/{job.id}", json=doc, timeout=5.0)
-        except Exception:
-            # Fail silently for now; in prod, add retries and logging
+            headers = {"Content-Type": "application/json"}
+            resp = await client.post(f"{elastic_url}/autointern-jobs/_doc/{job.id}", json=doc, headers=headers, timeout=5.0)
+            if resp.status_code not in (200, 201):
+                # Basic logging for visibility; in production use structured logging and retries
+                print(f"ES index failed: {resp.status_code} - {resp.text}")
+        except Exception as exc:
+            # Fail silently for now but print for local debugging; in prod, add retries and monitoring
+            print(f"ES index error: {exc}")
             pass
 
 from utils import make_dedupe_signature

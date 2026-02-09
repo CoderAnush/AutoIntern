@@ -39,6 +39,21 @@ describe('Admin DLQ E2E', () => {
       })
     }
 
-    checkJob()
+    checkJob().then(() => {
+      // Additionally verify the job is indexed in Elasticsearch
+      cy.log('Polling Elasticsearch for indexed document...')
+      const esSearch = () => {
+        return cy.request({ url: 'http://localhost:9200/autointern-jobs/_search?q=external_id:e2e-1', failOnStatusCode: false }).then((r) => {
+          if (r.status === 200 && r.body && r.body.hits && r.body.hits.total && r.body.hits.total.value > 0) {
+            expect(r.body.hits.hits[0]._source.external_id).to.equal('e2e-1')
+            return
+          }
+          cy.wait(2000)
+          return esSearch()
+        })
+      }
+
+      esSearch()
+    })
   })
 })
