@@ -8,6 +8,7 @@ app = FastAPI(title="AutoIntern API", version="0.1.0")
 
 app.include_router(health.router)
 app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(__import__('app.routes.jobs').routes.router, prefix="", tags=["jobs"])  # register jobs router
 
 @app.on_event("startup")
 async def startup_event():
