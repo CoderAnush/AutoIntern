@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
-from typing import Optional, List
+from typing import Optional
 import json
+from pydantic import BaseModel
 from app.deps.redis import get_redis
 from app.core.config import settings
 
@@ -26,13 +27,12 @@ async def list_dlq(count: int = 100, redis=Depends(get_redis)):
             parsed.append({"index": i, "payload": raw.decode() if isinstance(raw, bytes) else str(raw)})
     return {"count": len(parsed), "items": parsed}
 
-class RequeueRequest(BaseModel := object):
-    # Lightweight placeholder to keep type hints simple without adding more deps
+class RequeueRequest(BaseModel):
     index: int
 
 @router.post("/admin/dlq/requeue", dependencies=[Depends(require_admin)])
-async def requeue_item(body: dict, redis=Depends(get_redis)):
-    index = body.get("index")
+async def requeue_item(body: RequeueRequest, redis=Depends(get_redis)):
+    index = body.index
     if index is None:
         raise HTTPException(status_code=400, detail="index is required")
     raw = await redis.lindex(DLQ_KEY, index)
