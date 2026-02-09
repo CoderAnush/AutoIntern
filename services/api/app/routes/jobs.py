@@ -33,7 +33,10 @@ async def create_job(payload: JobCreate, db: AsyncSession = Depends(get_db)):
     return job
 
 @router.get("/jobs", response_model=List[JobOut])
-async def list_jobs(limit: int = 100, offset: int = 0, db: AsyncSession = Depends(get_db)):
-    q = await db.execute(select(JobModel).limit(limit).offset(offset))
+async def list_jobs(limit: int = 100, offset: int = 0, external_id: str | None = None, db: AsyncSession = Depends(get_db)):
+    if external_id:
+        q = await db.execute(select(JobModel).where(JobModel.external_id == external_id).limit(limit).offset(offset))
+    else:
+        q = await db.execute(select(JobModel).limit(limit).offset(offset))
     results = q.scalars().all()
     return results
