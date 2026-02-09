@@ -51,5 +51,40 @@ services:
     ports:
       - "8000:8000"
 
+  worker:
+    build: ./services/worker
+    depends_on:
+      - redis
+      - postgres
+      - elasticsearch
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ELASTIC_HOST=elasticsearch
+      - ELASTIC_PORT=9200
+      - WORKER_METRICS_PORT=8001
+    ports:
+      - "8001:8001"
+    restart: on-failure
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
+      - worker
+
+  grafana:
+    image: grafana/grafana:9.5.0
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+
 volumes:
   postgres_data:

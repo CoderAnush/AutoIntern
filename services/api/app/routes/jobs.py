@@ -23,6 +23,13 @@ async def create_job(payload: JobCreate, db: AsyncSession = Depends(get_db)):
     db.add(job)
     await db.commit()
     await db.refresh(job)
+    # Increment metrics for jobs created (best-effort)
+    try:
+        from app.metrics import JOB_CREATE_COUNT
+
+        JOB_CREATE_COUNT.inc()
+    except Exception:
+        pass
     return job
 
 @router.get("/jobs", response_model=List[JobOut])

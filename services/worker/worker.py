@@ -51,6 +51,15 @@ async def process_once(redis):
 async def main():
     redis = aioredis.from_url(REDIS_URL)
     print(f"Worker connected to {REDIS_URL}, listening on {QUEUE_KEY}")
+
+    # Start Prometheus metrics server and a coroutine to update DLQ gauge
+    try:
+        from metrics import start_metrics_server, metrics_loop
+        start_metrics_server(port=int(os.getenv('WORKER_METRICS_PORT', 8001)))
+        asyncio.create_task(metrics_loop(redis))
+    except Exception:
+        pass
+
     try:
         while True:
             await process_once(redis)

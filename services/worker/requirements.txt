@@ -3,3 +3,4 @@ httpx==0.24.1
 SQLAlchemy==2.0.18
 asyncpg==0.27.0
 psycopg2-binary==2.9.12
+prometheus_client==0.16.0

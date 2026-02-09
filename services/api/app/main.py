@@ -9,6 +9,7 @@ app = FastAPI(title="AutoIntern API", version="0.1.0")
 app.include_router(health.router)
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(__import__('app.routes.jobs').routes.router, prefix="", tags=["jobs"])  # register jobs router
+app.include_router(__import__('app.routes.admin').routes.router, prefix="", tags=["admin"])  # admin endpoints for DLQ inspection and management
 
 @app.on_event("startup")
 async def startup_event():
@@ -17,6 +18,38 @@ async def startup_event():
         # Create tables using SQLAlchemy metadata
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+
+
+@app.middleware("http")
+async def metrics_middleware(request, call_next):
+    # Simple request counter middleware; records method, path, and status
+    try:
+        from app.metrics import REQUEST_COUNT
+    except Exception:
+        REQUEST_COUNT = None
+
+    response = await call_next(request)
+
+    if REQUEST_COUNT is not None:
+        try:
+            REQUEST_COUNT.labels(method=request.method, endpoint=request.url.path, status=str(response.status_code)).inc()
+        except Exception:
+            pass
+
+    return response
+
+
+@app.get("/metrics")
+async def metrics():
+    try:
+        from app.metrics import metrics_response
+
+        data, content_type = metrics_response()
+        from fastapi.responses import Response
+
+        return Response(content=data, media_type=content_type)
+    except Exception:
+        return {"error": "metrics unavailable"}
 
 @app.on_event("shutdown")
 async def shutdown_event():
