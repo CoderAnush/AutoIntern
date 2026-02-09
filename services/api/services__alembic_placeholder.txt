@@ -1,0 +1,1 @@
+This folder contains Alembic migration scripts. Use `alembic -c alembic.ini revision --autogenerate -m "msg"` and `alembic -c alembic.ini upgrade head` when running from the `services/api` folder. The repo includes a simple env.py in the configuration directory to enable autogeneration using `app.models.models:Base` as target_metadata.
