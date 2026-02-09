@@ -1,4 +1,8 @@
 def test_db_session_importable():
+    # Skip test if SQLAlchemy isn't installed (optional dependency in dev)
+    import pytest
+    pytest.importorskip('sqlalchemy')
+
     # sanity-check: the db session module should import and expose an engine
     # Ensure services/api is on sys.path so `app` package is importable
     import sys
