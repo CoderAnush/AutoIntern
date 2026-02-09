@@ -17,6 +17,13 @@ Metrics:
 
 Prometheus configuration is in `infra/prometheus/prometheus.yml` and is included in `docker-compose.yml` for local development.
 
+Smoke test (optional in CI):
+- Set the environment variable `RUN_MONITORING_TESTS=true` in CI to enable the smoke test. The CI step will:
+  - Wait for `alert-receiver` to be healthy
+  - Send a test alert to Alertmanager: `scripts/send_test_alert.py --alert CI_SmokeTest`
+  - Poll the `alert-receiver` `/alerts` endpoint until it sees the test alert (or fail after timeout)
+
 Next steps:
 - Provision a Grafana dashboard to visualize DLQ growth, processed rates, and API errors.
 - Add alerting rules (Prometheus Alertmanager) to notify when DLQ or failure rates exceed thresholds.
+- Use `infra/alertmanager/secrets/` to mount production secrets; see `infra/alertmanager/secrets.README.md`.

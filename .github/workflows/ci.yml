@@ -55,6 +55,53 @@ PY
         run: |
           pytest -q
 
+      - name: Monitoring smoke test (optional)
+        if: env.RUN_MONITORING_TESTS == 'true'
+        run: |
+          # Wait for Alertmanager and alert-receiver to be available
+          set -eux
+          for i in $(seq 1 30); do
+            python - <<PY && break || true
+import requests
+try:
+    r = requests.get('http://alert-receiver:5001/health', timeout=2)
+    if r.status_code == 200:
+        print('alert-receiver ready')
+        import sys
+        sys.exit(0)
+    else:
+        print('alert-receiver not ready', r.status_code)
+        sys.exit(1)
+except Exception as e:
+    print('not ready', e)
+    sys.exit(1)
+PY
+            sleep 2
+          done
+
+          # Send a smoke test alert to Alertmanager
+          python scripts/send_test_alert.py --alert CI_SmokeTest
+
+          # Poll the alert-receiver for the alert arrival
+          for i in $(seq 1 30); do
+            python - <<PY && break || true
+import requests, time, sys
+try:
+    r = requests.get('http://alert-receiver:5001/alerts?count=10', timeout=2)
+    if r.status_code == 200:
+        data = r.json()
+        if any('CI_SmokeTest' in str(a) for a in data.get('alerts', [])):
+            print('alert received by alert-receiver')
+            sys.exit(0)
+    print('not received yet')
+    sys.exit(1)
+except Exception as e:
+    print('error', e)
+    sys.exit(1)
+PY
+            sleep 2
+          done
+
       - name: Lint (ruff)
         run: |
           python -m pip install ruff
