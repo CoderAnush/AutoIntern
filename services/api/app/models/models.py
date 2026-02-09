@@ -21,13 +21,14 @@ class Job(Base):
     __tablename__ = "jobs"
     id = Column(UUID(as_uuid=True), primary_key=True)
     source = Column(String(64))
-    external_id = Column(String(255))
+    external_id = Column(String(255), index=True)
     title = Column(String(512))
     description = Column(Text)
     location = Column(String(255))
     posted_at = Column(DateTime)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"))
     raw = Column(JSONB)
+    dedupe_signature = Column(String(255), index=True, nullable=True)
 
 class Resume(Base):
     __tablename__ = "resumes"

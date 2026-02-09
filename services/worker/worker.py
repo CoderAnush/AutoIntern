@@ -9,7 +9,9 @@ from processor import process_message
 
 REDIS_URL = f"redis://{os.getenv('REDIS_HOST','redis')}:{os.getenv('REDIS_PORT',6379)}"
 QUEUE_KEY = "ingest:jobs"
+DLQ_KEY = "ingest:dlq"
 ELASTIC_URL = f"http://{os.getenv('ELASTIC_HOST','elasticsearch')}:{os.getenv('ELASTIC_PORT',9200)}"
+MAX_RETRIES = int(os.getenv('WORKER_MAX_RETRIES', 3))
 
 async def process_once(redis):
     # One-off loop: BRPOP with timeout and process one message
@@ -21,11 +23,30 @@ async def process_once(redis):
     try:
         message = json.loads(raw)
     except Exception:
-        return False
+        # Could not parse JSON, move directly to DLQ with raw content
+        await redis.lpush(DLQ_KEY, raw)
+        return True
 
-    async with AsyncSessionLocal() as db:
-        await process_message(message, db, elastic_url=ELASTIC_URL)
-    return True
+    # Track attempts for retry logic
+    attempts = int(message.get("_attempts", 0))
+
+    try:
+        async with AsyncSessionLocal() as db:
+            await process_message(message, db, elastic_url=ELASTIC_URL)
+        return True
+    except Exception as exc:
+        attempts += 1
+        if attempts >= MAX_RETRIES:
+            # Move to DLQ with error info
+            message['_error'] = str(exc)
+            message['_attempts'] = attempts
+            await redis.lpush(DLQ_KEY, json.dumps(message))
+            return True
+        else:
+            # Requeue for retry with updated attempt count
+            message['_attempts'] = attempts
+            await redis.lpush(QUEUE_KEY, json.dumps(message))
+            return True
 
 async def main():
     redis = aioredis.from_url(REDIS_URL)
