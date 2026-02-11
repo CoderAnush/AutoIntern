@@ -90,12 +90,8 @@ async def health_db():
 # Phase 8 Health Monitoring Endpoints
 @app.get("/health")
 async def health_check():
-    """General health check endpoint."""
-    monitor = await get_health_monitor()
-    status = await monitor.get_health_status()
-
-    status_code = 200 if status["status"] == "healthy" else 503
-    return status if status_code == 200 else {"status": status["status"], "checks": status}
+    """General health check endpoint - confirms app is running."""
+    return {"status": "ok"}
 
 
 @app.get("/health/live")
