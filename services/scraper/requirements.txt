@@ -2,3 +2,4 @@ scrapy==2.9.0
 playwright==1.40.0
 pydantic==2.5.1
 redis==4.6.0
+PyYAML==6.0.1

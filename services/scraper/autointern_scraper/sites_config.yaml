@@ -1,0 +1,1005 @@
+# Sites Configuration - Define job portal sites for scraping
+# Each site defines: base URL, selectors, pagination, and field mappings
+
+indeed:
+  name: "Indeed"
+  description: "Indeed.com - Largest job board (US/Global)"
+  base_url: "https://www.indeed.com/jobs"
+
+  # Pagination strategy
+  pagination:
+    strategy: "offset"  # offset (0, 10, 20, ...) or page (1, 2, 3, ...)
+    param_name: "start"
+    increment: 10
+    max_pages: 50  # Limit to 50 pages = 500 jobs
+
+  # Search queries to use
+  search_queries:
+    - "software engineer"
+    - "full stack developer"
+    - "data scientist"
+    - "backend engineer"
+    - "frontend developer"
+    - "devops engineer"
+    - "machine learning engineer"
+    - "internship"
+
+  search_locations:
+    - "United States"
+    - "Remote"
+
+  # CSS/XPath selectors for job elements
+  selectors:
+    job_item: "div[data-testid='result']"  # Container for each job
+    job_title: "h2.jobTitle span"
+    company: "span[data-testid='company-name']"
+    location: "div[data-testid='job-location']"
+    job_url: "a.jcs-JobTitle"
+    salary: "span[data-testid='salaryLineItem']"
+    job_summary: "div.job-snippet"
+
+  # Request headers (rotate these)
+  headers:
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+    - "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"
+
+  # Retry and rate limiting
+  retry_attempts: 3
+  retry_delay: 2  # seconds
+  download_delay: 2  # seconds between requests
+  randomize_delay: true  # Jitter delay by 0-2s
+
+  # Job type detection keywords
+  job_type_keywords:
+    full_time: ["full-time", "full time", "permanent"]
+    internship: ["internship", "intern", "graduate"]
+    contract: ["contract", "freelance", "temporary"]
+    part_time: ["part-time", "part time"]
+
+wellfound:
+  name: "Wellfound"
+  description: "Wellfound (AngelList) - Startup job board"
+  base_url: "https://wellfound.com/api/v3/jobs"
+
+  pagination:
+    strategy: "offset"
+    param_name: "page"
+    increment: 1
+    max_pages: 100  # 5000+ jobs
+
+  search_queries:
+    - "software engineer"
+    - "product manager"
+    - "designer"
+    - "internship"
+
+  api_response: true  # Returns JSON, not HTML
+
+  headers:
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+    - "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+
+  retry_attempts: 3
+  retry_delay: 2
+  download_delay: 1
+  randomize_delay: true
+
+remoteok:
+  name: "RemoteOK"
+  description: "RemoteOK - Remote job board"
+  base_url: "https://remoteok.io/api/jobs?company="
+
+  pagination:
+    strategy: "none"  # Single response, no pagination
+    max_pages: 1
+
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h3.job-title"
+    company: "span.company-name"
+    location: "span.location"
+    job_url: "a.job-link"
+    salary: "span.salary"
+
+  api_response: true
+
+  headers:
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
+  retry_attempts: 3
+  retry_delay: 2
+  download_delay: 2
+  randomize_delay: true
+
+weworkremotely:
+  name: "WeWorkRemotely"
+  description: "WeWorkRemotely - Tech remote jobs"
+  base_url: "https://weworkremotely.com/api/v1/jobs"
+
+  pagination:
+    strategy: "offset"
+    param_name: "page"
+    increment: 1
+    max_pages: 50
+
+  search_queries:
+    - "engineering"
+    - "product"
+    - "design"
+    - "internship"
+
+  selectors:
+    job_item: "div.job-listing"
+    job_title: "h2.job-title"
+    company: "span.company"
+    location: "span.location"
+    job_url: "a.job-link"
+    job_type: "span.job-type"
+
+  api_response: false
+
+  headers:
+    - "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+
+  retry_attempts: 3
+  retry_delay: 2
+  download_delay: 2
+  randomize_delay: true
+
+# ===== MAJOR TECH COMPANY CAREER PAGES =====
+
+google_careers:
+  name: "Google Careers"
+  description: "Google - Cloud, Android, Products"
+  base_url: "https://www.google.com/careers"
+  company: "Google"
+  pagination:
+    strategy: "none"
+    max_pages: 1
+  selectors:
+    job_item: "div.gws-module-result"
+    job_title: "h3.gws-c-result__title"
+    job_url: "a[href*='careers.google']"
+  retry_attempts: 3
+  download_delay: 3
+
+microsoft_careers:
+  name: "Microsoft Careers"
+  description: "Microsoft - Azure, Office, Gaming"
+  base_url: "https://careers.microsoft.com/us/en/search-results"
+  company: "Microsoft"
+  pagination:
+    strategy: "none"
+    max_pages: 1
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h2.job-title"
+    location: "span.job-location"
+    job_url: "a.job-link"
+  retry_attempts: 3
+  download_delay: 3
+
+meta_careers:
+  name: "Meta Careers"
+  description: "Meta (Facebook) - Products, Research"
+  base_url: "https://www.metacareers.com/jobs"
+  company: "Meta"
+  pagination:
+    strategy: "offset"
+    param_name: "page"
+    max_pages: 10
+  selectors:
+    job_item: "a[class*='jobCardLink']"
+    job_title: "h3"
+    location: "span[class*='location']"
+  retry_attempts: 3
+  download_delay: 3
+
+amazon_careers:
+  name: "Amazon Careers"
+  description: "Amazon - AWS, Retail, Logistics"
+  base_url: "https://www.amazon.jobs"
+  company: "Amazon"
+  pagination:
+    strategy: "offset"
+    param_name: "page"
+    max_pages: 10
+  selectors:
+    job_item: "div[class*='flex flex-col']"
+    job_title: "a.base-search-result-card__candidate__title"
+    location: "span.job-search-result__meta-data__value"
+  retry_attempts: 3
+  download_delay: 3
+
+apple_careers:
+  name: "Apple Careers"
+  description: "Apple - Hardware, Software, Services"
+  base_url: "https://www.apple.com/careers"
+  company: "Apple"
+  pagination:
+    strategy: "none"
+    max_pages: 1
+  selectors:
+    job_item: "div.job-listing"
+    job_title: "h3.job-title"
+    location: "span.job-location"
+  retry_attempts: 3
+  download_delay: 3
+
+netflix_careers:
+  name: "Netflix Careers"
+  description: "Netflix - Streaming, Content"
+  base_url: "https://jobs.netflix.com"
+  company: "Netflix"
+  pagination:
+    strategy: "page"
+    max_pages: 5
+  selectors:
+    job_item: "a[class*='job-item']"
+    job_title: "h3"
+    location: "span.location"
+  retry_attempts: 3
+  download_delay: 2
+
+# ===== INDIAN IT COMPANIES =====
+
+tcs_careers:
+  name: "TCS Careers"
+  description: "Tata Consultancy Services - India's largest IT"
+  base_url: "https://www.tcs.com/careers"
+  company: "TCS"
+  pagination:
+    strategy: "none"
+    max_pages: 1
+  selectors:
+    job_item: "div.job-listing"
+    job_title: "h3"
+    location: "span.location"
+  retry_attempts: 3
+  download_delay: 2
+
+infosys_careers:
+  name: "Infosys Careers"
+  description: "Infosys - Global IT consulting"
+  base_url: "https://www.infosys.com/careers"
+  company: "Infosys"
+  pagination:
+    strategy: "none"
+    max_pages: 1
+  selectors:
+    job_item: "a.job-link"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+wipro_careers:
+  name: "Wipro Careers"
+  description: "Wipro - Global IT services"
+  base_url: "https://careers.wipro.com"
+  company: "Wipro"
+  pagination:
+    strategy: "none"
+    max_pages: 1
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+# ===== TECH JOB BOARDS =====
+
+github_jobs:
+  name: "GitHub Jobs"
+  description: "GitHub - Tech jobs from GitHub ecosystem"
+  base_url: "https://github.com/jobs"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 20
+  search_queries:
+    - "software engineer"
+    - "internship"
+  selectors:
+    job_item: "li[data-job-id]"
+    job_title: "h2.text-normal"
+    company: "a.Link--primary"
+    location: "span.text-gray"
+  retry_attempts: 3
+  download_delay: 2
+
+stackoverflow_jobs:
+  name: "Stack Overflow Jobs"
+  description: "Stack Overflow - Developer jobs"
+  base_url: "https://stackoverflow.com/jobs"
+  pagination:
+    strategy: "page"
+    param_name: "pg"
+    max_pages: 10
+  search_queries:
+    - "software engineer"
+    - "backend"
+  selectors:
+    job_item: "div.-job-item"
+    job_title: "h2.mb0"
+    company: "span.fc-black-700"
+    location: "span.fc-base"
+  retry_attempts: 3
+  download_delay: 2
+
+hackerrank_jobs:
+  name: "HackerRank Jobs"
+  description: "HackerRank - Jobs for developers"
+  base_url: "https://www.hackerrank.com/jobs"
+  pagination:
+    strategy: "page"
+    max_pages: 10
+  selectors:
+    job_item: "a.job-card"
+    job_title: "h4"
+    company: "span.company-name"
+  retry_attempts: 3
+  download_delay: 2
+
+leetcode_discuss:
+  name: "LeetCode Discuss"
+  description: "LeetCode - Jobs discussed in community"
+  base_url: "https://leetcode.com/discuss"
+  pagination:
+    strategy: "none"
+    max_pages: 1
+  selectors:
+    job_item: "div.job-posting"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+# ===== ADDITIONAL TECH PLATFORMS =====
+
+ycombinator_jobs:
+  name: "Y Combinator Jobs"
+  description: "Y Combinator - Startup jobs"
+  base_url: "https://www.ycombinator.com/jobs"
+  pagination:
+    strategy: "page"
+    max_pages: 5
+  selectors:
+    job_item: "a.job-link"
+    job_title: "h3"
+    company: "span.company"
+  retry_attempts: 3
+  download_delay: 2
+
+productmanagerhq:
+  name: "Product Manager HQ"
+  description: "Product Manager HQ - PM roles"
+  base_url: "https://www.productmanagerhq.com/jobs"
+  pagination:
+    strategy: "page"
+    max_pages: 5
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+dribbble_jobs:
+  name: "Dribbble Jobs"
+  description: "Dribbble - Design jobs"
+  base_url: "https://dribbble.com/jobs"
+  pagination:
+    strategy: "page"
+    max_pages: 5
+  selectors:
+    job_item: "a.job-item"
+    job_title: "h3"
+    company: "span.company"
+  retry_attempts: 3
+  download_delay: 2
+
+# ===== TIER 1: HIGH-VOLUME JOB PORTALS (INDIA) =====
+
+naukri:
+  name: "Naukri.com"
+  description: "Naukri - India's largest job board"
+  base_url: "https://www.naukri.com/search"
+  company: "Naukri"
+  pagination:
+    strategy: "offset"
+    param_name: "pageNo"
+    increment: 1
+    max_pages: 50
+  search_queries:
+    - "software engineer"
+    - "full stack developer"
+    - "data scientist"
+    - "internship"
+  selectors:
+    job_item: "div.jobTupleHeader"
+    job_title: "a.jobTitle"
+    company: "a.subTitle"
+    location: "span.locSpan"
+  retry_attempts: 3
+  download_delay: 2
+
+monster_india:
+  name: "Monster India"
+  description: "Monster India - Job aggregator"
+  base_url: "https://www.monsterindia.com/search"
+  company: "Monster"
+  pagination:
+    strategy: "offset"
+    param_name: "pg"
+    increment: 1
+    max_pages: 50
+  search_queries:
+    - "software engineer"
+    - "developer"
+    - "internship"
+  selectors:
+    job_item: "div.job-result"
+    job_title: "h2.job-title"
+    company: "span.comname"
+    location: "span.jlocation"
+  retry_attempts: 3
+  download_delay: 2
+
+freshersworld:
+  name: "Freshersworld"
+  description: "Freshersworld - Freshers job board"
+  base_url: "https://www.freshersworld.com/jobs"
+  company: "Freshersworld"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 30
+  search_queries:
+    - "fresher"
+    - "graduate"
+    - "internship"
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3.job-title"
+    company: "span.company-name"
+    location: "span.location"
+  retry_attempts: 3
+  download_delay: 2
+
+timesjobs:
+  name: "TimesJobs"
+  description: "TimesJobs - Times Group job portal"
+  base_url: "https://www.timesjobs.com/candidate/job-search.html"
+  company: "TimesJobs"
+  pagination:
+    strategy: "offset"
+    param_name: "start"
+    increment: 1
+    max_pages: 40
+  search_queries:
+    - "software engineer"
+    - "developer"
+  selectors:
+    job_item: "li.clearfix"
+    job_title: "h2"
+    company: "span.jobCompanyName"
+    location: "span.jobLocation"
+  retry_attempts: 3
+  download_delay: 2
+
+foundit:
+  name: "Foundit"
+  description: "Foundit - Former Monster, now independent"
+  base_url: "https://www.foundit.in/search"
+  company: "Foundit"
+  pagination:
+    strategy: "offset"
+    param_name: "index"
+    increment: 10
+    max_pages: 40
+  search_queries:
+    - "software engineer"
+    - "developer"
+    - "internship"
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h3.job-title"
+    company: "span.company-name"
+    location: "span.location-text"
+  retry_attempts: 3
+  download_delay: 2
+
+shine:
+  name: "Shine.com"
+  description: "Shine - India's professional network"
+  base_url: "https://www.shine.com/job-search.html"
+  company: "Shine"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 30
+  search_queries:
+    - "software engineer"
+    - "developer"
+  selectors:
+    job_item: "div.jobcard"
+    job_title: "h3"
+    company: "span.compname"
+  retry_attempts: 3
+  download_delay: 2
+
+hirect:
+  name: "Hirect"
+  description: "Hirect - Direct freelance jobs"
+  base_url: "https://hirect.in/jobs"
+  company: "Hirect"
+  pagination:
+    strategy: "offset"
+    param_name: "offset"
+    increment: 20
+    max_pages: 20
+  search_queries:
+    - "developer"
+    - "freelance"
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h2"
+    company: "span.company"
+  retry_attempts: 3
+  download_delay: 2
+
+cutshort:
+  name: "Cutshort"
+  description: "Cutshort - Tech talent matching"
+  base_url: "https://cutshort.com/jobs"
+  company: "Cutshort"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 25
+  search_queries:
+    - "software engineer"
+    - "developer"
+  selectors:
+    job_item: "div.job-listing"
+    job_title: "h2"
+    company: "span.company"
+  retry_attempts: 3
+  download_delay: 2
+
+# ===== TIER 2: REMOTE & TECH-FOCUSED =====
+
+flexjobs:
+  name: "FlexJobs"
+  description: "FlexJobs - Remote & flexible jobs"
+  base_url: "https://www.flexjobs.com/search/jobs"
+  company: "FlexJobs"
+  pagination:
+    strategy: "offset"
+    param_name: "start"
+    increment: 20
+    max_pages: 30
+  search_queries:
+    - "remote software engineer"
+    - "remote developer"
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h2.job-title"
+    company: "span.company-name"
+  retry_attempts: 3
+  download_delay: 2
+
+hackerearth:
+  name: "HackerEarth Jobs"
+  description: "HackerEarth - Developer hiring & challenges"
+  base_url: "https://www.hackerearth.com/jobs"
+  company: "HackerEarth"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 20
+  search_queries:
+    - "developer"
+    - "engineer"
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3.job-title"
+    company: "span.company-name"
+  retry_attempts: 3
+  download_delay: 2
+
+angellist_talent:
+  name: "AngelList Talent"
+  description: "AngelList - Startup & VC-backed jobs"
+  base_url: "https://angel.co/jobs"
+  company: "AngelList"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 30
+  search_queries:
+    - "software engineer"
+    - "full stack"
+  selectors:
+    job_item: "a.job-item"
+    job_title: "h3"
+    company: "span.company"
+  retry_attempts: 3
+  download_delay: 2
+
+turing:
+  name: "Turing"
+  description: "Turing - Remote engineering jobs"
+  base_url: "https://www.turing.com/jobs"
+  company: "Turing"
+  pagination:
+    strategy: "offset"
+    param_name: "offset"
+    increment: 20
+    max_pages: 25
+  search_queries:
+    - "remote engineer"
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h2"
+    company: "span.company"
+  retry_attempts: 3
+  download_delay: 2
+
+arcdev:
+  name: "Arc.dev"
+  description: "Arc.dev - Remote developer freelance"
+  base_url: "https://arc.dev/jobs"
+  company: "Arc"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 20
+  search_queries:
+    - "remote developer"
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h3"
+    company: "span.company"
+  retry_attempts: 3
+  download_delay: 2
+
+remotive:
+  name: "Remotive"
+  description: "Remotive - Remote job board"
+  base_url: "https://remotive.io/remote-jobs"
+  company: "Remotive"
+  pagination:
+    strategy: "offset"
+    param_name: "offset"
+    increment: 20
+    max_pages: 20
+  search_queries:
+    - "developer"
+    - "engineer"
+  selectors:
+    job_item: "a.job-item"
+    job_title: "h2"
+    company: "span.company"
+  retry_attempts: 3
+  download_delay: 2
+
+jobspresso:
+  name: "Jobspresso"
+  description: "Jobspresso - Curated remote jobs"
+  base_url: "https://jobspresso.co/jobs"
+  company: "Jobspresso"
+  pagination:
+    strategy: "page"
+    param_name: "paged"
+    max_pages: 15
+  search_queries:
+    - "remote job"
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h2"
+    company: "span.company"
+  retry_attempts: 3
+  download_delay: 2
+
+# ===== TIER 4: TOP TECH COMPANIES (EXTENDED) =====
+
+nvidia_careers:
+  name: "NVIDIA Careers"
+  description: "NVIDIA - AI, GPU, Data Center"
+  base_url: "https://careers.nvidia.com"
+  company: "NVIDIA"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 10
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h3"
+    location: "span.location"
+  retry_attempts: 3
+  download_delay: 3
+
+flipkart_careers:
+  name: "Flipkart Careers"
+  description: "Flipkart - India's e-commerce"
+  base_url: "https://www.flipkart.careers"
+  company: "Flipkart"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 10
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3"
+    location: "span.location"
+  retry_attempts: 3
+  download_delay: 3
+
+swiggy_careers:
+  name: "Swiggy Careers"
+  description: "Swiggy - Food delivery & logistics"
+  base_url: "https://www.swiggycareers.com"
+  company: "Swiggy"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 10
+  selectors:
+    job_item: "div.job-listing"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+zoho_careers:
+  name: "Zoho Careers"
+  description: "Zoho - SaaS products"
+  base_url: "https://careers.zoho.com"
+  company: "Zoho"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 15
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+freshworks_careers:
+  name: "Freshworks Careers"
+  description: "Freshworks - Customer engagement platform"
+  base_url: "https://www.freshworks.com/careers"
+  company: "Freshworks"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 8
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+razorpay_careers:
+  name: "Razorpay Careers"
+  description: "Razorpay - Fintech, payments"
+  base_url: "https://razorpay.com/careers"
+  company: "Razorpay"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 8
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+# ===== TIER 5: DATA & ANALYTICS COMPANIES =====
+
+mu_sigma:
+  name: "Mu Sigma"
+  description: "Mu Sigma - Decision science & analytics"
+  base_url: "https://www.mu-sigma.com/careers"
+  company: "Mu Sigma"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 10
+  search_queries:
+    - "analyst"
+    - "data scientist"
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+fractal_analytics:
+  name: "Fractal Analytics"
+  description: "Fractal - AI & advanced analytics"
+  base_url: "https://www.fractalanalytics.com/careers"
+  company: "Fractal Analytics"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 8
+  search_queries:
+    - "analytics"
+    - "data scientist"
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+tiger_analytics:
+  name: "Tiger Analytics"
+  description: "Tiger Analytics - Data science consulting"
+  base_url: "https://www.tigeranalytics.com/careers"
+  company: "Tiger Analytics"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 8
+  search_queries:
+    - "data scientist"
+    - "analyst"
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+latentview:
+  name: "LatentView Analytics"
+  description: "LatentView - Analytics consulting"
+  base_url: "https://www.latentview.com/careers"
+  company: "LatentView Analytics"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 8
+  search_queries:
+    - "analytics"
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+zs_associates:
+  name: "ZS Associates"
+  description: "ZS Associates - Consulting & analytics"
+  base_url: "https://www.zsassociates.com/careers"
+  company: "ZS Associates"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 10
+  search_queries:
+    - "consultant"
+    - "analyst"
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+tredence:
+  name: "Tredence"
+  description: "Tredence - Analytics & AI"
+  base_url: "https://www.tredence.com/careers"
+  company: "Tredence"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 8
+  search_queries:
+    - "analyst"
+    - "data scientist"
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+course5_intelligence:
+  name: "Course5 Intelligence"
+  description: "Course5 - Data & AI"
+  base_url: "https://www.course5i.com/careers"
+  company: "Course5 Intelligence"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 8
+  search_queries:
+    - "analyst"
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+databricks:
+  name: "Databricks"
+  description: "Databricks - Data & AI platform"
+  base_url: "https://databricks.com/careers"
+  company: "Databricks"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 10
+  search_queries:
+    - "engineer"
+    - "data"
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+snowflake:
+  name: "Snowflake"
+  description: "Snowflake - Cloud data platform"
+  base_url: "https://www.snowflake.com/careers"
+  company: "Snowflake"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 10
+  search_queries:
+    - "engineer"
+    - "data"
+  selectors:
+    job_item: "div.job-item"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 2
+
+palantir:
+  name: "Palantir"
+  description: "Palantir - Big data & AI"
+  base_url: "https://www.palantir.com/careers"
+  company: "Palantir"
+  pagination:
+    strategy: "page"
+    param_name: "page"
+    max_pages: 10
+  search_queries:
+    - "engineer"
+    - "analyst"
+  selectors:
+    job_item: "div.job-card"
+    job_title: "h3"
+  retry_attempts: 3
+  download_delay: 3
+
+# Global defaults (apply to all sites)
+defaults:
+  timeout: 30
+  connection_pool_size: 20
+
+  # Anti-bot measures
+  cloudflare_bypass: true
+  proxy_rotation: false  # Set to true if you have proxy list
+  user_agent_rotation: true
+
+  # Redis configuration
+  redis_host: "localhost"
+  redis_port: 6379
+  redis_queue: "ingest:jobs"
+
+  # Data extraction
+  fields:
+    - title: "Job title"
+    - company: "Hiring company"
+    - location: "Work location"
+    - description: "Job description"
+    - url: "Direct job link"
+    - salary_min: "Min salary (if available)"
+    - salary_max: "Max salary (if available)"
+    - job_type: "full-time/internship/contract"
+    - source: "Source site name"
+    - posted_date: "Date posted"
+    - scraped_at: "When we scraped it"

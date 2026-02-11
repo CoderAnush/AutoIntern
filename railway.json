@@ -1,0 +1,42 @@
+{
+  "name": "AutoIntern API",
+  "description": "AI-powered job recommendation platform with security hardening",
+  "builder": "dockerfile",
+  "buildCommand": "pip install -r services/api/requirements.txt",
+  "startCommand": "uvicorn services.api.app.main:app --host 0.0.0.0 --port $PORT",
+  "env": [
+    {
+      "name": "DATABASE_URL",
+      "description": "PostgreSQL connection string",
+      "required": true
+    },
+    {
+      "name": "SECRET_KEY",
+      "description": "JWT secret key (generate with: openssl rand -hex 32)",
+      "required": true
+    },
+    {
+      "name": "REDIS_URL",
+      "description": "Redis connection URL",
+      "required": true
+    },
+    {
+      "name": "SMTP_PASSWORD",
+      "description": "Email SMTP password",
+      "required": false
+    }
+  ],
+  "services": {
+    "postgres": {
+      "image": "postgres:15",
+      "environment": {
+        "POSTGRES_DB": "autointern",
+        "POSTGRES_USER": "autointern",
+        "POSTGRES_PASSWORD": "change-me-in-production"
+      }
+    },
+    "redis": {
+      "image": "redis:7"
+    }
+  }
+}

@@ -3,6 +3,9 @@ from typing import Any, Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.models import Job as JobModel
 import httpx
+import logging
+
+logger = logging.getLogger(__name__)
 
 INDEX_NAME = "autointern-jobs"
 INDEX_TEMPLATE = {
@@ -39,7 +42,34 @@ async def ensure_index(client: httpx.AsyncClient, elastic_url: str) -> None:
     except Exception as exc:
         print(f"ES ensure index error: {exc}")
 
-async def index_to_elasticsearch(job: JobModel, elastic_url: str):
+async def maybe_queue_embedding(job: JobModel, redis_client=None) -> None:
+    """
+    Attempt to queue job embedding generation (PHASE 4).
+
+    This function will queue the job for embedding generation if Redis is available.
+    If not available, it logs a message - embeddings can be generated on-demand via API.
+
+    Args:
+        job: JobModel instance
+        redis_client: Optional Redis async client
+    """
+    try:
+        if redis_client:
+            import json
+            task = {
+                "type": "job",
+                "id": str(job.id),
+                "text": job.description or ""
+            }
+            await redis_client.rpush("ingest:embeddings", json.dumps(task))
+            logger.info(f"Queued job embedding: {job.id}")
+        else:
+            logger.debug(f"Redis not available - job {job.id} can be embedded via POST /jobs/{job.id}/embeddings")
+    except Exception as e:
+        logger.warning(f"Failed to queue embedding for job {job.id}: {e}")
+
+
+
     # Robust HTTP index request to Elasticsearch with basic error handling
     async with httpx.AsyncClient() as client:
         try:
@@ -116,6 +146,8 @@ async def process_message(message: Dict[str, Any], db: AsyncSession, elastic_url
             job = await db.get(JobModel, inserted_id)
             # Index to ES (best-effort)
             await index_to_elasticsearch(job, elastic_url)
+            # Queue embedding generation for PHASE 4 (best-effort)
+            await maybe_queue_embedding(job)
             return job
     except IntegrityError as ie:
         # Could be unique violation on external_id; try to find existing by external_id
@@ -165,4 +197,6 @@ async def process_message(message: Dict[str, Any], db: AsyncSession, elastic_url
     await db.commit()
     await db.refresh(job)
     await index_to_elasticsearch(job, elastic_url)
+    # Queue embedding generation for PHASE 4 (best-effort)
+    await maybe_queue_embedding(job)
     return job

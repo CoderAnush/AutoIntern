@@ -1,0 +1,44 @@
+{
+  "jobs": [
+    {
+      "id": 1,
+      "title": "Full Stack Engineer",
+      "startup_name": "TechStartup Inc",
+      "location": "San Francisco, CA",
+      "description": "We're looking for a Full Stack Engineer to join our founding engineering team. Work on our next-gen AI platform.",
+      "url": "https://wellfound.com/jobs/full-stack-engineer",
+      "level": "Mid",
+      "salary_min": 120000,
+      "salary_max": 150000,
+      "equity": 0.5,
+      "has_more": true
+    },
+    {
+      "id": 2,
+      "title": "Product Manager Internship",
+      "startup_name": "StartupAI",
+      "location": "New York, NY",
+      "description": "Join us as a Product Manager Intern. Help shape the future of AI-powered productivity tools.",
+      "url": "https://wellfound.com/jobs/pm-internship",
+      "level": "Intern",
+      "salary_min": 20,
+      "salary_max": 25,
+      "equity": 0.1,
+      "has_more": true
+    },
+    {
+      "id": 3,
+      "title": "Backend Engineer (Python/Go)",
+      "startup_name": "CloudOps Co",
+      "location": "Remote",
+      "description": "Scale our infrastructure to serve millions. Experience with Python and Go required.",
+      "url": "https://wellfound.com/jobs/backend-engineer",
+      "level": "Senior",
+      "salary_min": 180000,
+      "salary_max": 220000,
+      "equity": 1.0,
+      "has_more": false
+    }
+  ],
+  "has_more": false
+}
