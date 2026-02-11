@@ -3,7 +3,7 @@
 import logging
 from typing import Optional
 from fastapi import HTTPException, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.services.auth_service import AuthService
 from app.core.config import settings
 
