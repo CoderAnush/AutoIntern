@@ -1,7 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import health, users, jobs, resumes, recommendations, admin
+import logging
 from app.core.config import settings
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AutoIntern API", version="0.1.0")
 
@@ -14,13 +16,47 @@ app.add_middleware(
     allow_headers=settings.cors_allow_headers,
 )
 
-# Include routers
+# Import routes with error handling
+from app.routes import health
+
+# Always include health router
 app.include_router(health.router)
-app.include_router(users.router, prefix="/api/auth", tags=["auth"])
-app.include_router(jobs.router, prefix="/api", tags=["jobs"])
-app.include_router(resumes.router, prefix="/api", tags=["resumes"])
-app.include_router(recommendations.router, prefix="/api", tags=["recommendations"])
-app.include_router(admin.router, prefix="/api", tags=["admin"])
+
+# Try to include feature routers (they may fail if external services are unavailable)
+try:
+    from app.routes import users
+    app.include_router(users.router, prefix="/api/auth", tags=["auth"])
+    logger.info("✓ Users/Auth router loaded")
+except Exception as e:
+    logger.warning(f"✗ Users/Auth router failed: {e}")
+
+try:
+    from app.routes import jobs
+    app.include_router(jobs.router, prefix="/api", tags=["jobs"])
+    logger.info("✓ Jobs router loaded")
+except Exception as e:
+    logger.warning(f"✗ Jobs router failed: {e}")
+
+try:
+    from app.routes import resumes
+    app.include_router(resumes.router, prefix="/api", tags=["resumes"])
+    logger.info("✓ Resumes router loaded")
+except Exception as e:
+    logger.warning(f"✗ Resumes router failed: {e}")
+
+try:
+    from app.routes import recommendations
+    app.include_router(recommendations.router, prefix="/api", tags=["recommendations"])
+    logger.info("✓ Recommendations router loaded")
+except Exception as e:
+    logger.warning(f"✗ Recommendations router failed: {e}")
+
+try:
+    from app.routes import admin
+    app.include_router(admin.router, prefix="/api", tags=["admin"])
+    logger.info("✓ Admin router loaded")
+except Exception as e:
+    logger.warning(f"✗ Admin router failed: {e}")
 
 
 @app.on_event("startup")
