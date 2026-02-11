@@ -8,12 +8,12 @@ from app.services.auth_service import AuthService
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
-
+ 
 security = HTTPBearer()
 
 
 async def get_current_user(
-    credentials: HTTPAuthCredentials = Depends(security),
+    credentials: HTTPAuthorizationCredentials = Depends(security),
 ) -> dict:
     """
     Dependency to validate JWT token and extract user info from protected routes.
@@ -26,7 +26,7 @@ async def get_current_user(
     5. Returns user claims
 
     Args:
-        credentials: HTTPAuthCredentials from Authorization header
+        credentials: HTTPAuthorizationCredentials from Authorization header
 
     Returns:
         Dictionary with user_id and email
@@ -73,7 +73,7 @@ async def get_current_user(
 
 
 async def get_optional_user(
-    credentials: Optional[HTTPAuthCredentials] = Depends(security),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> Optional[dict]:
     """
     Optional version of get_current_user for semi-protected routes.
@@ -82,7 +82,7 @@ async def get_optional_user(
     Does not raise 401, allowing unauthenticated access.
 
     Args:
-        credentials: Optional HTTPAuthCredentials from Authorization header
+        credentials: Optional HTTPAuthorizationCredentials from Authorization header
 
     Returns:
         Dictionary with user_id if token valid, None otherwise
