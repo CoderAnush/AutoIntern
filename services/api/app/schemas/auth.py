@@ -12,7 +12,7 @@ class UserCreate(BaseModel):
     password: str
 
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "email": "user@example.com",
                 "password": "SecurePass123!"
@@ -27,7 +27,7 @@ class UserLogin(BaseModel):
     password: str
 
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "email": "user@example.com",
                 "password": "SecurePass123!"
@@ -43,8 +43,8 @@ class UserResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes = True
-        json_schema_extra = {
+        orm_mode = True
+        schema_extra = {
             "example": {
                 "id": "550e8400-e29b-41d4-a716-446655440000",
                 "email": "user@example.com",
@@ -62,7 +62,7 @@ class TokenResponse(BaseModel):
     expires_in: int  # Seconds until access token expiry
 
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
                 "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -79,7 +79,7 @@ class PasswordChange(BaseModel):
     new_password: str
 
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "old_password": "OldPass123!",
                 "new_password": "NewPass456!"
@@ -93,7 +93,7 @@ class TokenRefresh(BaseModel):
     refresh_token: str
 
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
             }
@@ -106,7 +106,7 @@ class PasswordChangeResponse(BaseModel):
     msg: str = "Password changed successfully"
 
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "msg": "Password changed successfully"
             }

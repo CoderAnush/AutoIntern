@@ -22,7 +22,7 @@ class EmailLogResponse(BaseModel):
     created_at: datetime
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 
 class EmailPreferences(BaseModel):
@@ -35,7 +35,7 @@ class EmailPreferences(BaseModel):
     email_frequency: str = "weekly"  # daily, weekly, never
 
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "notify_on_new_jobs": True,
                 "notify_on_resume_upload": True,
@@ -56,7 +56,7 @@ class EmailPreferencesUpdate(BaseModel):
     email_frequency: Optional[str] = None
 
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "notify_on_new_jobs": False,
                 "email_frequency": "daily",
@@ -74,7 +74,7 @@ class EmailTaskResponse(BaseModel):
     queued_at: datetime
 
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "task_id": "550e8400-e29b-41d4-a716-446655440000",
                 "status": "pending",
