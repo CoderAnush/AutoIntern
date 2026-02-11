@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import health, users, resumes, recommendations, emails
+from app.routes import health
+# from app.routes import users, resumes, recommendations, emails
 from app.core.config import settings
 # from app.models.base import Base
 # from app.db.session import engine, AsyncSessionLocal
@@ -24,11 +25,11 @@ app.add_middleware(
 # add_request_logging(app, AsyncSessionLocal)
 
 app.include_router(health.router)
-app.include_router(users.router, prefix="/users", tags=["users"])
+# app.include_router(users.router, prefix="/users", tags=["users"])
 # app.include_router(__import__('app.routes.jobs').routes.router, prefix="", tags=["jobs"])  # register jobs router
-app.include_router(resumes.router, prefix="", tags=["resumes"])  # resume upload and management
-app.include_router(recommendations.router, prefix="", tags=["recommendations"])  # job recommendations and quality scoring
-app.include_router(emails.router, prefix="/users/me", tags=["emails"])  # email preferences and logs (Phase 7)
+# app.include_router(resumes.router, prefix="", tags=["resumes"])  # resume upload and management
+# app.include_router(recommendations.router, prefix="", tags=["recommendations"])  # job recommendations and quality scoring
+# app.include_router(emails.router, prefix="/users/me", tags=["emails"])  # email preferences and logs (Phase 7)
 # app.include_router(__import__('app.routes.admin').routes.router, prefix="", tags=["admin"])  # admin endpoints for DLQ inspection and management
 
 @app.on_event("startup")
@@ -43,34 +44,27 @@ async def startup_event():
 
 @app.middleware("http")
 async def metrics_middleware(request, call_next):
-    # Simple request counter middleware; records method, path, and status
-    try:
-        from app.metrics import REQUEST_COUNT
-    except Exception:
-        REQUEST_COUNT = None
+    # Disabled during startup debugging
+    # try:
+    #     from app.metrics import REQUEST_COUNT
+    # except Exception:
+    #     REQUEST_COUNT = None
 
     response = await call_next(request)
 
-    if REQUEST_COUNT is not None:
-        try:
-            REQUEST_COUNT.labels(method=request.method, endpoint=request.url.path, status=str(response.status_code)).inc()
-        except Exception:
-            pass
+    # if REQUEST_COUNT is not None:
+    #     try:
+    #         REQUEST_COUNT.labels(method=request.method, endpoint=request.url.path, status=str(response.status_code)).inc()
+    #     except Exception:
+    #         pass
 
     return response
 
 
 @app.get("/metrics")
 async def metrics():
-    try:
-        from app.metrics import metrics_response
-
-        data, content_type = metrics_response()
-        from fastapi.responses import Response
-
-        return Response(content=data, media_type=content_type)
-    except Exception:
-        return {"error": "metrics unavailable"}
+    # Disabled during startup debugging
+    return {"error": "metrics unavailable"}
 
 @app.on_event("shutdown")
 async def shutdown_event():
