@@ -1,9 +1,9 @@
-from pydantic_settings import BaseSettings
-from pydantic import ConfigDict
+from pydantic import BaseSettings
 from typing import List
 
 class Settings(BaseSettings):
-    model_config = ConfigDict(env_file=".env")
+    class Config:
+        env_file = ".env"
 
     database_url: str = "postgresql+asyncpg://autointern:change-me@localhost/autointern"
     secret_key: str = "dev-secret-key-not-for-production"
