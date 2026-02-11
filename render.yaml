@@ -1,48 +1,37 @@
 services:
   - type: web
     name: autointern-api
-    env: docker
-    dockerfilePath: ./Dockerfile
-    dockerContext: .
-    plan: free
+    runtime: docker
+    dockerfilePath: ./services/api/Dockerfile
+    region: oregon
 
-    # Environment variables (secrets to be set in Render dashboard)
+    # Health check configuration
+    healthCheck:
+      path: /health
+      interval: 30
+      timeout: 5
+      startFailureThreshold: 4
+      successThreshold: 1
+
+    # Environment variables - MUST be set in Render dashboard
     envVars:
       - key: DATABASE_URL
-        scope: build,runtime
-        sync: false  # Set manually in Render dashboard
+        scope: run
+        isFile: false
       - key: REDIS_URL
-        scope: build,runtime
-        sync: false  # Set manually in Render dashboard
+        scope: run
+        isFile: false
       - key: SECRET_KEY
-        scope: build,runtime
-        sync: false  # Set manually in Render dashboard
-      - key: PYTHONUNBUFFERED
-        value: "1"
-      - key: PYTHONDONTWRITEBYTECODE
-        value: "1"
+        scope: run
+        isFile: false
+      - key: ENVIRONMENT
+        value: production
+        scope: run
+      - key: LOG_LEVEL
+        value: info
+        scope: run
 
-    # Build configuration
-    buildCommand: "pip install --no-cache-dir -r services/api/requirements.txt"
-    startCommand: "uvicorn services.api.app.main:app --host 0.0.0.0 --port 8000"
-
-    # Resource limits (free tier)
-    numInstances: 1
-
-    # Health check
-    healthCheckPath: /health
-    healthCheckInterval: 30
-
-    # Exposed ports
-    ports:
-      - containerPort: 8000
-        hostPort: 8000
-
-databases:
-  - name: autointern-postgres
-    databaseName: autointern
-    user: autointern
-    plan: free
-
-  - name: autointern-redis
-    plan: free
+    # Render automatically sets PORT environment variable
+    # No need to modify command - Render handles it
+    autoDeployOnPush: true
+    branch: dev/init
