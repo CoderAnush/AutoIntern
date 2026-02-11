@@ -4,10 +4,46 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.models import Job as JobModel
 import httpx
 
+INDEX_NAME = "autointern-jobs"
+INDEX_TEMPLATE = {
+    "settings": {
+        "number_of_shards": 1,
+        "number_of_replicas": 0,
+    },
+    "mappings": {
+        "properties": {
+            "id": {"type": "keyword"},
+            "external_id": {"type": "keyword"},
+            "title": {"type": "text"},
+            "description": {"type": "text"},
+            "location": {"type": "keyword"},
+            "source": {"type": "keyword"},
+        }
+    },
+}
+
+_INDEX_READY = False
+
+
+async def ensure_index(client: httpx.AsyncClient, elastic_url: str) -> None:
+    global _INDEX_READY
+    if _INDEX_READY:
+        return
+    try:
+        head = await client.head(f"{elastic_url}/{INDEX_NAME}", timeout=5.0)
+        if head.status_code == 404:
+            resp = await client.put(f"{elastic_url}/{INDEX_NAME}", json=INDEX_TEMPLATE, timeout=10.0)
+            if resp.status_code not in (200, 201):
+                print(f"ES index create failed: {resp.status_code} - {resp.text}")
+        _INDEX_READY = True
+    except Exception as exc:
+        print(f"ES ensure index error: {exc}")
+
 async def index_to_elasticsearch(job: JobModel, elastic_url: str):
     # Robust HTTP index request to Elasticsearch with basic error handling
     async with httpx.AsyncClient() as client:
         try:
+            await ensure_index(client, elastic_url)
             doc = {
                 "id": str(job.id),
                 "external_id": job.external_id,
@@ -18,7 +54,7 @@ async def index_to_elasticsearch(job: JobModel, elastic_url: str):
             }
             # Using a simple index API; in production use official client and index settings
             headers = {"Content-Type": "application/json"}
-            resp = await client.post(f"{elastic_url}/autointern-jobs/_doc/{job.id}", json=doc, headers=headers, timeout=5.0)
+            resp = await client.post(f"{elastic_url}/{INDEX_NAME}/_doc/{job.id}", json=doc, headers=headers, timeout=5.0)
             if resp.status_code not in (200, 201):
                 # Basic logging for visibility; in production use structured logging and retries
                 print(f"ES index failed: {resp.status_code} - {resp.text}")
