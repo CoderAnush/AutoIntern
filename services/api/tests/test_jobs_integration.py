@@ -3,7 +3,7 @@ import time
 import pytest
 pytest.importorskip('fastapi')
 from fastapi.testclient import TestClient
-from services.api.app.main import app
+from app.main import app
 import psycopg2
 
 client = TestClient(app)
