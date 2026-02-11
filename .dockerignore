@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+.github
+
+# Python
+__pycache__
+*.py[cod]
+.pytest_cache
+.coverage
+*.egg-info
+venv/
+env/
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# OS
+.DS_Store
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+
+# Tests
+.tox/
+htmlcov/
+
+# Docker
+docker-compose.yml
+
+# CI/CD
+.gitlab-ci.yml
+.travis.yml
