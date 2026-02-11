@@ -19,13 +19,21 @@ import json
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
-# Initialize MinIO client
-minio_client = MinIOStorage(
-    endpoint=settings.minio_endpoint,
-    access_key=settings.minio_access_key,
-    secret_key=settings.minio_secret_key,
-    bucket_name=settings.minio_bucket_name
-)
+# Lazy initialization - MinIO client initialized on first use, not at import time
+_minio_client = None
+
+
+async def get_minio_client():
+    """Get or create MinIO storage client (lazy initialization)."""
+    global _minio_client
+    if _minio_client is None:
+        _minio_client = MinIOStorage(
+            endpoint=settings.minio_endpoint,
+            access_key=settings.minio_access_key,
+            secret_key=settings.minio_secret_key,
+            bucket_name=settings.minio_bucket_name
+        )
+    return _minio_client
 
 
 @router.post("/resumes/upload", response_model=ResumeOut, status_code=status.HTTP_201_CREATED)
@@ -85,7 +93,8 @@ async def upload_resume(
 
         # Upload file to MinIO
         try:
-            storage_url = minio_client.upload_file(user_id, file_content, file.filename)
+            minio_mgr = await get_minio_client()
+            storage_url = minio_mgr.upload_file(user_id, file_content, file.filename)
         except Exception as e:
             logger.error(f"MinIO upload error: {e}")
             raise HTTPException(
@@ -274,7 +283,8 @@ async def delete_resume(resume_id: str, db: AsyncSession = Depends(get_db)):
                 # Extract object name from URL
                 # URL format: http://minio:9000/resumes/user/file.ext
                 object_name = resume.storage_url.split('/', 3)[-1]
-                minio_client.delete_file(object_name)
+                minio_mgr = await get_minio_client()
+                minio_mgr.delete_file(object_name)
             except Exception as e:
                 logger.warning(f"Failed to delete file from MinIO: {e}")
 

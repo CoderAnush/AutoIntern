@@ -1,4 +1,9 @@
 # Routes package
-# Only import health router; other routers have external service dependencies
-# that may not be available at startup (MinIO, embeddings service, etc.)
-from . import health
+# All routers properly handle external service initialization:
+# - health: No external dependencies
+# - users: Uses dependency injection for database
+# - jobs: Lazy loads embeddings manager on first use
+# - resumes: Lazy loads MinIO client on first use
+# - recommendations: Lazy loads embeddings manager on first use
+# - admin: Uses dependency injection for Redis
+from . import health, users, jobs, resumes, recommendations, admin

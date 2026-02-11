@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import health
+from app.routes import health, users, jobs, resumes, recommendations, admin
 from app.core.config import settings
 
 app = FastAPI(title="AutoIntern API", version="0.1.0")
@@ -14,8 +14,13 @@ app.add_middleware(
     allow_headers=settings.cors_allow_headers,
 )
 
-# Include health router with all health check endpoints
+# Include routers
 app.include_router(health.router)
+app.include_router(users.router, prefix="/api/auth", tags=["auth"])
+app.include_router(jobs.router, prefix="/api", tags=["jobs"])
+app.include_router(resumes.router, prefix="/api", tags=["resumes"])
+app.include_router(recommendations.router, prefix="/api", tags=["recommendations"])
+app.include_router(admin.router, prefix="/api", tags=["admin"])
 
 
 @app.on_event("startup")
