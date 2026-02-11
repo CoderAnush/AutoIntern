@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: autointern-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+
+    # Environment variables (secrets to be set in Render dashboard)
+    envVars:
+      - key: DATABASE_URL
+        scope: build,runtime
+        sync: false  # Set manually in Render dashboard
+      - key: REDIS_URL
+        scope: build,runtime
+        sync: false  # Set manually in Render dashboard
+      - key: SECRET_KEY
+        scope: build,runtime
+        sync: false  # Set manually in Render dashboard
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PYTHONDONTWRITEBYTECODE
+        value: "1"
+
+    # Build configuration
+    buildCommand: "pip install --no-cache-dir -r services/api/requirements.txt"
+    startCommand: "uvicorn services.api.app.main:app --host 0.0.0.0 --port 8000"
+
+    # Resource limits (free tier)
+    numInstances: 1
+
+    # Health check
+    healthCheckPath: /health
+    healthCheckInterval: 30
+
+    # Exposed ports
+    ports:
+      - containerPort: 8000
+        hostPort: 8000
+
+databases:
+  - name: autointern-postgres
+    databaseName: autointern
+    user: autointern
+    plan: free
+
+  - name: autointern-redis
+    plan: free
