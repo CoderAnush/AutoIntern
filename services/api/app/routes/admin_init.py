@@ -38,3 +38,4 @@ async def health():
         return {"status": "ok", "message": "Database is ready"}
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Database error: {str(e)[:150]}")
+# Redeploy trigger
