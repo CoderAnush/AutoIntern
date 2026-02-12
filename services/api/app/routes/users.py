@@ -131,7 +131,7 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
             # Don't fail registration if email queueing fails
 
         return UserResponse(
-            id=new_user.id,
+            id=str(new_user.id),
             email=new_user.email,
             created_at=new_user.created_at
         )
