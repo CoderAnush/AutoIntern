@@ -1,6 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import Optional, List
 from datetime import datetime
+from uuid import UUID
 
 
 class SkillExtracted(BaseModel):
@@ -24,6 +25,12 @@ class ResumeOut(BaseModel):
     skills: List[str]  # List of extracted skill names
     storage_url: Optional[str]
     created_at: Optional[datetime]
+
+    @validator('id', 'user_id', pre=False)
+    def convert_ids_to_string(cls, v):
+        if isinstance(v, UUID):
+            return str(v)
+        return v
 
     class Config:
         orm_mode = True

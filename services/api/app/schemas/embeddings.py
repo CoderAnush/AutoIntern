@@ -1,8 +1,9 @@
 """Pydantic schemas for embeddings and recommendations."""
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import List
 from datetime import datetime
+from uuid import UUID
 
 
 class EmbeddingOut(BaseModel):
@@ -13,6 +14,12 @@ class EmbeddingOut(BaseModel):
     model_name: str  # "sentence-transformers/all-MiniLM-L6-v2"
     vector: List[float]  # 384-dimensional vector
     created_at: datetime
+
+    @validator('id', 'parent_id', pre=False)
+    def convert_ids_to_string(cls, v):
+        if isinstance(v, UUID):
+            return str(v)
+        return v
 
     class Config:
         orm_mode = True
@@ -29,6 +36,12 @@ class RecommendationResult(BaseModel):
     matched_skills: List[str]  # Skills that appear in both resume and job
     skill_gaps: List[str]  # Required skills in job not found in resume
 
+    @validator('job_id', 'resume_id', pre=False)
+    def convert_ids_to_string(cls, v):
+        if isinstance(v, UUID):
+            return str(v)
+        return v
+
 
 class ResumeQualityScore(BaseModel):
     """Quality assessment breakdown for a resume."""
@@ -37,3 +50,9 @@ class ResumeQualityScore(BaseModel):
     skill_count_score: float  # 0-100 (normalized against expected skill count)
     completeness_score: float  # 0-100 (presence of tech + soft skills)
     overall_quality_score: float  # 0-100 (average of three component scores)
+
+    @validator('resume_id', pre=False)
+    def convert_id_to_string(cls, v):
+        if isinstance(v, UUID):
+            return str(v)
+        return v

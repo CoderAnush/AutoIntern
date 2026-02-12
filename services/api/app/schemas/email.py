@@ -2,9 +2,10 @@
 Pydantic models for email-related API requests and responses.
 """
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from typing import List, Optional
 from datetime import datetime
+from uuid import UUID
 
 
 class EmailLogResponse(BaseModel):
@@ -20,6 +21,12 @@ class EmailLogResponse(BaseModel):
     error_message: Optional[str] = None
     retries: int = 0
     created_at: datetime
+
+    @validator('id', 'user_id', pre=False)
+    def convert_ids_to_string(cls, v):
+        if isinstance(v, UUID):
+            return str(v)
+        return v
 
     class Config:
         orm_mode = True

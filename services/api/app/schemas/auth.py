@@ -1,8 +1,9 @@
 """Pydantic schemas for authentication endpoints."""
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from typing import Optional
 from datetime import datetime
+from uuid import UUID
 
 
 class UserCreate(BaseModel):
@@ -41,6 +42,12 @@ class UserResponse(BaseModel):
     id: str
     email: str
     created_at: datetime
+
+    @validator('id', pre=False)
+    def convert_id_to_string(cls, v):
+        if isinstance(v, UUID):
+            return str(v)
+        return v
 
     class Config:
         orm_mode = True
