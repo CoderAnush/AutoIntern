@@ -103,9 +103,8 @@ async def upload_resume(
             )
 
         # Create Resume record in database
-        resume_id = str(uuid.uuid4())
         resume = ResumeModel(
-            id=resume_id,
+            id=uuid.uuid4(),
             user_id=user_id,
             file_name=file.filename,
             parsed_text=extracted_text,
@@ -128,13 +127,13 @@ async def upload_resume(
         # Auto-generate embedding for recommendation engine (non-blocking)
         try:
             embeddings_mgr = EmbeddingsManager()
-            await embeddings_mgr.add_resume_embedding(resume_id, extracted_text, db)
-            logger.info(f"Resume embedding generated successfully: {resume_id}")
+            await embeddings_mgr.add_resume_embedding(str(resume.id), extracted_text, db)
+            logger.info(f"Resume embedding generated successfully: {resume.id}")
         except Exception as e:
             # Log but don't fail - embedding can be generated later
             logger.warning(f"Failed to generate resume embedding: {e}. Resume will still be usable for manual queries.")
 
-        logger.info(f"Resume uploaded successfully: {resume_id} for user {user_id}")
+        logger.info(f"Resume uploaded successfully: {resume.id} for user {user_id}")
 
         # Queue resume upload confirmation email (Phase 7)
         try:
