@@ -62,17 +62,18 @@ except Exception as e:
 @app.on_event("startup")
 async def startup_event():
     """Initialize on app startup."""
+    logger.info("Starting application initialization...")
     try:
         from app.db.session import engine
         from app.models.models import Base
 
-        # Create all tables in the database
+        logger.info("Creating database schema...")
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
         logger.info("Database schema initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize database schema: {e}")
+        logger.error(f"Failed to initialize database schema: {e}", exc_info=True)
 
 
 @app.middleware("http")
@@ -98,4 +99,3 @@ async def metrics_summary():
 async def shutdown_event():
     """Cleanup on app shutdown."""
     pass
-# Render redeploy trigger
