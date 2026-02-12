@@ -249,7 +249,7 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
         logger.info(f"User logged in successfully: {user.email}")
 
         # Create tokens
-        token_response = create_token_response(user.id, settings.secret_key)
+        token_response = create_token_response(str(user.id), settings.secret_key)
 
         return TokenResponse(**token_response)
 
