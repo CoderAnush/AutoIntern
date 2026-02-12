@@ -23,7 +23,7 @@ from app.core.config import settings
 from uuid import uuid4
 
 # Phase 8: Security Hardening
-from app.services.rate_limiter import RateLimiter, RateLimitConfig
+from app.services.rate_limiter import get_rate_limiter, RateLimitConfig
 from app.services.account_lockout import AccountLockout
 
 logger = logging.getLogger(__name__)
@@ -55,8 +55,7 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     """
     try:
         # Phase 8: Rate limiting on registration endpoint
-        rate_limiter = RateLimiter(settings.redis_url)
-        await rate_limiter.connect()
+        rate_limiter = await get_rate_limiter(settings.redis_url)
 
         is_allowed, count, reset_seconds = await rate_limiter.is_allowed(
             key=f"register:{user_data.email.lower()}",
@@ -66,14 +65,11 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 
         if not is_allowed:
             logger.warning(f"Registration rate limit exceeded for: {user_data.email}")
-            await rate_limiter.disconnect()
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=f"Too many registration attempts. Try again in {reset_seconds} seconds.",
                 headers={"Retry-After": str(reset_seconds)}
             )
-
-        await rate_limiter.disconnect()
 
         # Validate password strength
         is_valid_password, error_msg = PasswordValidator.validate_password(user_data.password)
@@ -127,7 +123,6 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
                 user_name=user_name
             )
 
-            await email_queue.disconnect()
             logger.info(f"Welcome email queued for: {new_user.email}")
         except Exception as e:
             logger.error(f"Failed to queue welcome email for {new_user.email}: {e}")
@@ -179,8 +174,7 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
         email_lower = credentials.email.lower()
 
         # Phase 8: Rate limiting on login endpoint (5 per 5 minutes)
-        rate_limiter = RateLimiter(settings.redis_url)
-        await rate_limiter.connect()
+        rate_limiter = await get_rate_limiter(settings.redis_url)
 
         is_allowed, count, reset_seconds = await rate_limiter.is_allowed(
             key=f"login:{email_lower}",
@@ -190,7 +184,6 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
 
         if not is_allowed:
             logger.warning(f"Login rate limit exceeded for: {email_lower}")
-            await rate_limiter.disconnect()
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=f"Too many login attempts. Try again in {reset_seconds} seconds.",
@@ -205,7 +198,6 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
 
         if not user:
             logger.warning(f"Login failed - user not found: {email_lower}")
-            await rate_limiter.disconnect()
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid email or password"
@@ -216,7 +208,6 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
         if await lockout_service.is_locked(user.id):
             remaining_seconds = await lockout_service.get_lockout_time_remaining(user.id)
             logger.warning(f"Login failed - account locked for: {email_lower}")
-            await rate_limiter.disconnect()
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Account is locked due to too many failed attempts. Try again in {remaining_seconds} seconds.",
@@ -228,8 +219,6 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
             # Record failed login attempt
             failed_attempts = await lockout_service.record_failed_attempt(user.id)
             logger.warning(f"Login failed - invalid password for: {email_lower} (attempt {failed_attempts})")
-
-            await rate_limiter.disconnect()
 
             # Check if now locked
             if await lockout_service.is_locked(user.id):
@@ -248,7 +237,6 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
         # Verify user is active
         if not user.is_active:
             logger.warning(f"Login failed - user inactive: {email_lower}")
-            await rate_limiter.disconnect()
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Account is inactive"
@@ -260,8 +248,6 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
 
         # Create tokens
         token_response = create_token_response(user.id, settings.secret_key)
-
-        await rate_limiter.disconnect()
 
         return TokenResponse(**token_response)
 
@@ -421,8 +407,7 @@ async def change_password(
         user_id = current_user.get("user_id")
 
         # Phase 8: Rate limiting on password change endpoint (3 per hour)
-        rate_limiter = RateLimiter(settings.redis_url)
-        await rate_limiter.connect()
+        rate_limiter = await get_rate_limiter(settings.redis_url)
 
         is_allowed, count, reset_seconds = await rate_limiter.is_allowed(
             key=f"change_password:{user_id}",
@@ -432,14 +417,11 @@ async def change_password(
 
         if not is_allowed:
             logger.warning(f"Password change rate limit exceeded for user: {user_id}")
-            await rate_limiter.disconnect()
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                 detail=f"Too many password change attempts. Try again in {reset_seconds} seconds.",
                 headers={"Retry-After": str(reset_seconds)}
             )
-
-        await rate_limiter.disconnect()
 
         user = await db.get(UserModel, user_id)
 
@@ -495,7 +477,6 @@ async def change_password(
                 user_name=user_name
             )
 
-            await email_queue.disconnect()
             logger.info(f"Password change notification email queued for: {user.email}")
         except Exception as e:
             logger.error(f"Failed to queue password change email for {user.email}: {e}")
