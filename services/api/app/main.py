@@ -22,6 +22,14 @@ from app.routes import health
 # Always include health router
 app.include_router(health.router)
 
+# Include initialization router
+try:
+    from app.routes import admin_init
+    app.include_router(admin_init.router)
+    logger.info("Initialization endpoints loaded")
+except Exception as e:
+    logger.warning(f"Failed to load initialization endpoints: {e}")
+
 # Try to include feature routers (they may fail if external services are unavailable)
 try:
     from app.routes import users
@@ -73,7 +81,7 @@ async def startup_event():
 
         logger.info("Database schema initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize database schema: {e}", exc_info=True)
+        logger.error(f"Failed to initialize database schema on startup: {e}", exc_info=True)
 
 
 @app.middleware("http")
