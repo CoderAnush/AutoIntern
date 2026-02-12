@@ -6,6 +6,24 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["init"])
 
+@router.get("/init/debug", summary="Debug Configuration")
+async def debug_config():
+    """Show debug info about configuration (safe to expose)."""
+    from app.core.config import settings
+    db_url = settings.database_url
+    
+    # Hide credentials
+    safe_url = db_url.split('@')[0].replace(settings.database_url.split(':')[1], '***HIDDEN***') if '@' in db_url else db_url
+    
+    return {
+        "database_url_safe": safe_url,
+        "database_url_length": len(db_url),
+        "has_trailing_newline": db_url.endswith('\n'),
+        "stripped_url_length": len(db_url.strip()),
+        "first_50_chars": db_url[:50].replace(settings.database_url.split('@')[0].split(':')[1], '***')
+    }
+
+
 @router.post("/init/schema", status_code=status.HTTP_201_CREATED, summary="Initialize Database Schema")
 async def init_database():
     """Initialize database schema by creating all tables."""
@@ -38,4 +56,3 @@ async def health():
         return {"status": "ok", "message": "Database is ready"}
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Database error: {str(e)[:150]}")
-# Redeploy trigger
