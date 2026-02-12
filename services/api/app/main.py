@@ -98,3 +98,4 @@ async def metrics_summary():
 async def shutdown_event():
     """Cleanup on app shutdown."""
     pass
+# Render redeploy trigger
