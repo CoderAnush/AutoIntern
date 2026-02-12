@@ -105,7 +105,7 @@ async def upload_resume(
         # Create Resume record in database
         resume = ResumeModel(
             id=uuid.uuid4(),
-            user_id=user_id,
+            user_id=uuid.UUID(user_id) if isinstance(user_id, str) else user_id,
             file_name=file.filename,
             parsed_text=extracted_text,
             skills=json.dumps(skills),  # Store as JSON
