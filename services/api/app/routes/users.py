@@ -30,6 +30,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# Phase 8 deployment - Redis pooling and UUID serializeation fixes applied
+
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
