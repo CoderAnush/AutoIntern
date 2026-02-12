@@ -44,8 +44,8 @@ class RateLimiter:
             await self.redis_client.ping()
             logger.info("Rate limiter connected to Redis")
         except Exception as e:
-            logger.error(f"Failed to connect to Redis: {e}")
-            raise
+            logger.warning(f"Failed to connect to Redis: {e}")
+            # Don't raise - allow graceful degradation
 
     async def disconnect(self) -> None:
         """Disconnect from Redis."""
@@ -245,6 +245,10 @@ async def get_rate_limiter(
 
     if _rate_limiter is None:
         _rate_limiter = RateLimiter(redis_url)
-        await _rate_limiter.connect()
+        try:
+            await _rate_limiter.connect()
+        except Exception as e:
+            logger.warning(f"Failed to connect rate limiter to Redis on initialization: {e}")
+            # Continue anyway - rate limiting will fail open and allow all requests
 
     return _rate_limiter
