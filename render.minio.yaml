@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: autointern-minio
+    runtime: docker
+    dockerfilePath: ./Dockerfile.minio
+    region: oregon
+
+    envVars:
+      - key: MINIO_ROOT_USER
+        value: minioadmin
+        scope: run
+      - key: MINIO_ROOT_PASSWORD
+        value: minioadmin123
+        scope: run
+
+    healthCheck:
+      path: /minio/health/live
+      interval: 30
+      timeout: 5
+      startFailureThreshold: 3
+
+    # Persistent storage for MinIO data
+    disks:
+      - name: minio-data
+        mountPath: /data
+        sizeGB: 10
