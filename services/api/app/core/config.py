@@ -45,5 +45,8 @@ class Settings(BaseSettings):
     # Redis Configuration (Phase 7)
     redis_url: str = "redis://localhost:6379/0"
 
+    # Admin Configuration
+    admin_api_key: str = ""  # Set via environment variable for admin access
+
 
 settings = Settings()
