@@ -79,8 +79,14 @@ class RateLimiter:
             - current_count (int): Current request count in window
             - reset_after_seconds (int): Seconds until counter resets
         """
+        # If Redis is unavailable, fail open (allow all requests)
         if not self.redis_client:
             await self.connect()
+
+        if not self.redis_client:
+            # Redis still not available after connection attempt
+            logger.debug(f"Redis unavailable for rate limit check on {key} - allowing request (fail open)")
+            return True, 0, 0
 
         try:
             # Get current count
