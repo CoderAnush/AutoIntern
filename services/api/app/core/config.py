@@ -1,4 +1,4 @@
-from pydantic import BaseSettings
+from pydantic import BaseSettings, validator
 from typing import List
 
 class Settings(BaseSettings):
@@ -47,6 +47,18 @@ class Settings(BaseSettings):
 
     # Admin Configuration
     admin_api_key: str = ""  # Set via environment variable for admin access
+
+    @validator('database_url', pre=True)
+    def _strip_database_url(cls, v):
+        return v.strip() if isinstance(v, str) else v
+
+    @validator('redis_url', pre=True)
+    def _strip_redis_url(cls, v):
+        return v.strip() if isinstance(v, str) else v
+
+    @validator('minio_endpoint', pre=True)
+    def _strip_minio_endpoint(cls, v):
+        return v.strip() if isinstance(v, str) else v
 
 
 settings = Settings()
