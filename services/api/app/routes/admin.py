@@ -1,4 +1,14 @@
+from fastapi import APIRouter, BackgroundTasks, status, HTTPException
+from sqlalchemy import select
+import logging
 from app.db.session import AsyncSessionLocal
+from app.services.embeddings_service import EmbeddingsManager
+from app.models.models import Job, Resume
+
+logger = logging.getLogger(__name__)
+
+router = APIRouter()
+
 
 @router.post("/generate-embeddings", status_code=status.HTTP_202_ACCEPTED)
 async def trigger_embeddings_generation(
@@ -10,18 +20,19 @@ async def trigger_embeddings_generation(
     background_tasks.add_task(generate_embeddings_task)
     return {"message": "Embeddings generation started in background"}
 
+
 async def generate_embeddings_task():
     """Background task to generate embeddings."""
     async with AsyncSessionLocal() as db:
         try:
             logger.info("Starting background embeddings generation...")
             embeddings_mgr = EmbeddingsManager()
-            
+
             # Process Jobs
             result = await db.execute(select(Job))
             jobs = result.scalars().all()
             job_count = 0
-            
+
             for job in jobs:
                 try:
                     if job.description and len(job.description) > 20:
@@ -29,12 +40,12 @@ async def generate_embeddings_task():
                         job_count += 1
                 except Exception as e:
                     logger.error(f"Failed to process job {job.id}: {e}")
-                    
+
             # Process Resumes
             result = await db.execute(select(Resume))
             resumes = result.scalars().all()
             resume_count = 0
-            
+
             for resume in resumes:
                 try:
                     if resume.parsed_text and len(resume.parsed_text) > 20:
@@ -42,8 +53,8 @@ async def generate_embeddings_task():
                         resume_count += 1
                 except Exception as e:
                     logger.error(f"Failed to process resume {resume.id}: {e}")
-            
+
             logger.info(f"Embeddings generation complete. Processed {job_count} jobs and {resume_count} resumes.")
-            
+
         except Exception as e:
             logger.error(f"Global error in embeddings generation task: {e}")

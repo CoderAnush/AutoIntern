@@ -112,7 +112,7 @@ async def seed_jobs(db: AsyncSession = Depends(get_db)):
     count = 0
     for j in seed_data:
         job = JobModel(
-            id=uuid.UUID(j["id"]),
+            id=j["id"] if isinstance(j["id"], str) else str(j["id"]),
             source=j["source"],
             external_id=j["external_id"],
             title=j["title"],

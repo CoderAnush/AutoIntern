@@ -105,7 +105,7 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 
         # Create user
         new_user = UserModel(
-            id=uuid4(),
+            id=str(uuid4()),
             email=user_data.email.lower(),
             password_hash=password_hash,
             is_active=True
