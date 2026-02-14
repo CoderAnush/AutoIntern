@@ -37,6 +37,7 @@ class RecommendationResult(BaseModel):
     skill_gaps: List[str]  # Required skills in job not found in resume
     company_name: str = ""
     apply_url: str = ""
+    job_source: str = "unknown"  # Source of job: seed, indeed, wellfound, remoteok, etc.
 
     @validator('job_id', 'resume_id', pre=False)
     def convert_ids_to_string(cls, v):

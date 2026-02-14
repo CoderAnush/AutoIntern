@@ -226,6 +226,7 @@ class RecommendationEngine:
                     "job_location": job.location,
                     "company_name": job.company_name,
                     "apply_url": job.apply_url,
+                    "job_source": job.source,
                     "resume_id": resume_id,
                     "similarity_score": float(composite_score),
                     "vector_similarity": float(vector_similarity_score),

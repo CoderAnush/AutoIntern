@@ -103,6 +103,7 @@ async def get_job_recommendations(
                 job_location=r["job_location"],
                 company_name=r.get("company_name", ""),
                 apply_url=r.get("apply_url", ""),
+                job_source=r.get("job_source", "unknown"),
                 resume_id=r["resume_id"],
                 similarity_score=r["similarity_score"],
                 matched_skills=r["matched_skills"],
@@ -310,8 +311,18 @@ async def batch_index_jobs(
 
             for job in jobs_to_index:
                 try:
+                    # Skip jobs with insufficient description length
+                    if not job.description or len(job.description) < 20:
+                        logger.warning(f"Skipping job {job.id} ({job.title}): description too short")
+                        failed_count += 1
+                        continue
+
                     await mgr.add_job_embedding(job.id, job.description, db)
                     indexed_count += 1
+                except ValueError as e:
+                    # Text too short or other validation error
+                    logger.warning(f"Skipping job {job.id}: {e}")
+                    failed_count += 1
                 except Exception as e:
                     logger.warning(f"Failed to index job {job.id}: {e}")
                     failed_count += 1
