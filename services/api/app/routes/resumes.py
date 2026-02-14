@@ -24,19 +24,26 @@ _minio_client = None
 
 
 async def get_minio_client():
-    """Get or create MinIO storage client (lazy initialization)."""
+    """Get or create MinIO storage client (lazy initialization) with local fallback."""
     global _minio_client
     if _minio_client is None:
-        _minio_client = MinIOStorage(
-            endpoint=settings.minio_endpoint,
-            access_key=settings.minio_access_key,
-            secret_key=settings.minio_secret_key,
-            bucket_name=settings.minio_bucket_name
-        )
+        try:
+            _minio_client = MinIOStorage(
+                endpoint=settings.minio_endpoint,
+                access_key=settings.minio_access_key,
+                secret_key=settings.minio_secret_key,
+                bucket_name=settings.minio_bucket_name
+            )
+            logger.info("Using MinIO storage")
+        except Exception as e:
+            logger.warning(f"MinIO not available ({e}), falling back to local file storage")
+            from app.services.local_file_storage import LocalFileStorage
+            _minio_client = LocalFileStorage()
     return _minio_client
 
 
-@router.post("/resumes/upload", response_model=ResumeOut, status_code=status.HTTP_201_CREATED)
+
+@router.post("/upload", response_model=ResumeOut, status_code=status.HTTP_201_CREATED)
 async def upload_resume(
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
@@ -89,23 +96,32 @@ async def upload_resume(
             )
 
         # Extract skills from text
-        skills = extract_skills_from_text(extracted_text)
+        try:
+            skills = extract_skills_from_text(extracted_text)
+            logger.info(f"Extracted {len(skills)} skills")
+        except Exception as e:
+            logger.error(f"Skill extraction failed: {e}")
+            skills = [] # Fallback to empty skills
 
         # Upload file to MinIO
         try:
+            logger.info(f"Initializing storage client...")
             minio_mgr = await get_minio_client()
-            storage_url = minio_mgr.upload_file(user_id, file_content, file.filename)
+            logger.info(f"Uploading file for user {user_id}...")
+            storage_url = minio_mgr.upload_file(str(user_id), file_content, file.filename)
+            logger.info(f"Upload successful: {storage_url}")
         except Exception as e:
-            logger.error(f"MinIO upload error: {e}")
+            logger.error(f"Storage upload error: {e}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Failed to upload file: {str(e)}"
             )
 
         # Create Resume record in database
+        # Store UUIDs as strings for SQLite compatibility
         resume = ResumeModel(
-            id=uuid.uuid4(),
-            user_id=uuid.UUID(user_id) if isinstance(user_id, str) else user_id,
+            id=str(uuid.uuid4()),
+            user_id=str(user_id) if user_id is not None else None,
             file_name=file.filename,
             parsed_text=extracted_text,
             skills=json.dumps(skills),  # Store as JSON
@@ -182,7 +198,7 @@ async def upload_resume(
         )
 
 
-@router.get("/resumes/{resume_id}", response_model=ResumeOut)
+@router.get("/{resume_id}", response_model=ResumeOut)
 async def get_resume(resume_id: str, db: AsyncSession = Depends(get_db)):
     """Get a single resume by ID."""
     try:
@@ -220,7 +236,7 @@ async def get_resume(resume_id: str, db: AsyncSession = Depends(get_db)):
         )
 
 
-@router.get("/resumes", response_model=list[ResumeOut])
+@router.get("/", response_model=list[ResumeOut])
 async def list_resumes(
     current_user: dict = Depends(get_current_user),
     limit: int = Query(10, ge=1, le=100),
@@ -261,7 +277,7 @@ async def list_resumes(
         )
 
 
-@router.delete("/resumes/{resume_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{resume_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_resume(resume_id: str, db: AsyncSession = Depends(get_db)):
     """Delete a resume by ID."""
     try:

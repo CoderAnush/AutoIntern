@@ -1,0 +1,153 @@
+INFO:     Started server process [13736]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:63683 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58769 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49699 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55537 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55539 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55541 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55543 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55545 - "GET /api/jobs?limit=2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55547 - "GET /api/jobs/search?q=Engineer&limit=2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50611 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50613 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50615 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50617 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64256 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63841 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63876 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63878 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63880 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63882 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:50298 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50302 - "GET /api/jobs/search?query=Engineer HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:50304 - "GET /api/jobs/1 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:50306 - "POST /api/resumes/upload HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:50308 - "GET /api/resumes HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:50310 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:50317 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50319 - "POST /api/auth/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54979 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54989 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54991 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54993 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54995 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:54997 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54999 - "GET /api/jobs/search?query=Engineer HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:55001 - "GET /api/jobs/1 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:55003 - "POST /api/resumes/upload HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55005 - "GET /api/resumes HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55009 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:55015 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55017 - "POST /api/auth/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55033 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55035 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55068 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55070 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55083 - "POST /api/init/seed-jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58115 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58117 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58119 - "GET /api/jobs/job1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63163 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63165 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58640 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58642 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:58644 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58646 - "GET /api/jobs/search?query=Engineer HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:58648 - "GET /api/jobs/1 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58650 - "POST /api/resumes/upload HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:58652 - "GET /api/resumes HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:58654 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:58660 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58662 - "POST /api/auth/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55156 - "GET /api/jobs/search?query=Engineer HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:55158 - "GET /api/jobs/job1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60470 - "GET /api/jobs/search?query=Engineer HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:57843 - "GET /api/jobs/search?q=Engineer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57845 - "GET /api/jobs/job1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54101 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54104 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54107 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54112 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:54115 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54117 - "GET /api/jobs/search?q=Engineer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54119 - "GET /api/jobs/job1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54123 - "POST /api/resumes/upload HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:54125 - "GET /api/resumes HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:54127 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:54133 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54135 - "POST /api/auth/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53943 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53945 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53947 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53950 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53952 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53954 - "GET /api/jobs/search?q=Engineer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53956 - "GET /api/jobs/job1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53958 - "POST /api/resumes/upload HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53960 - "GET /api/resumes HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53962 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:53968 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53970 - "POST /api/auth/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:62304 - "POST /api/auth/register HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:62306 - "POST /api/auth/login HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:62308 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:61982 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49962 - "POST /api/auth/login HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:50350 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:53285 - "POST /api/auth/login HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:53287 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53289 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:55142 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55144 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55146 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55148 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55150 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55152 - "GET /api/jobs/search?q=Engineer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55154 - "GET /api/jobs/job1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55156 - "POST /api/resumes/upload HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55158 - "GET /api/resumes HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55161 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:55167 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55169 - "POST /api/auth/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55184 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55186 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55189 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55191 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55193 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55195 - "GET /api/jobs/search?q=Engineer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55198 - "GET /api/jobs/job1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55200 - "POST /api/resumes/upload HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55202 - "GET /api/resumes HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55204 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:55210 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55212 - "POST /api/auth/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63681 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63683 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:63685 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:55691 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55693 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55697 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55699 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:64683 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64685 - "POST /api/auth/register HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64690 - "POST /api/auth/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64692 - "GET /api/auth/me HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:64694 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64696 - "GET /api/jobs/search?q=Engineer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64698 - "GET /api/jobs/job1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64700 - "POST /api/resumes/upload HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:64702 - "GET /api/resumes HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:64704 - "POST /api/users/change-password HTTP/1.1" 422 Unprocessable Entity
+INFO:     127.0.0.1:64710 - "GET /docs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:64712 - "POST /api/auth/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52660 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:61305 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50523 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50523 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54339 - "GET /api/jobs/search?q=Engineer HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54339 - "GET /api/jobs/job1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54283 - "GET /api/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54283 - "GET / HTTP/1.1" 404 Not Found

@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
+import json
 import logging
 import numpy as np
 
@@ -28,7 +29,7 @@ async def get_embeddings_manager():
     return embeddings_mgr
 
 
-@router.get("/recommendations/jobs-for-resume/{resume_id}", response_model=List[RecommendationResult])
+@router.get("/jobs-for-resume/{resume_id}", response_model=List[RecommendationResult])
 async def get_job_recommendations(
     resume_id: str,
     min_similarity: float = Query(0.5, ge=0.0, le=1.0),
@@ -67,7 +68,19 @@ async def get_job_recommendations(
 
         # Convert embedding from list to numpy array
         resume_embedding = np.array(embedding_record.vector, dtype=np.float32)
-        resume_skills = resume.skills if isinstance(resume.skills, list) else []
+        if isinstance(resume.skills, list):
+            resume_skills = resume.skills
+        elif isinstance(resume.skills, str):
+            try:
+                resume_skills = json.loads(resume.skills) if resume.skills else []
+            except Exception:
+                resume_skills = []
+        else:
+            resume_skills = []
+        
+            # If stored skills are empty, derive from parsed text to avoid stale 0 scores
+            if not resume_skills and resume.parsed_text:
+                resume_skills = extract_skills_from_text(resume.parsed_text)
 
         # Get embeddings manager and generate recommendations
         mgr = await get_embeddings_manager()
@@ -105,7 +118,7 @@ async def get_job_recommendations(
         raise HTTPException(status_code=500, detail="Failed to generate recommendations")
 
 
-@router.get("/recommendations/resumes-for-job/{job_id}", response_model=List[RecommendationResult])
+@router.get("/resumes-for-job/{job_id}", response_model=List[RecommendationResult])
 async def get_resume_recommendations(
     job_id: str,
     min_similarity: float = Query(0.5, ge=0.0, le=1.0),
@@ -182,7 +195,7 @@ async def get_resume_recommendations(
         raise HTTPException(status_code=500, detail="Failed to generate recommendations")
 
 
-@router.get("/recommendations/resume-quality/{resume_id}", response_model=ResumeQualityScore)
+@router.get("/resume-quality/{resume_id}", response_model=ResumeQualityScore)
 async def get_resume_quality(
     resume_id: str,
     db: AsyncSession = Depends(get_db)
@@ -207,9 +220,20 @@ async def get_resume_quality(
             raise HTTPException(status_code=404, detail="Resume not found")
 
         # Calculate quality scores
-        resume_skills = resume.skills if isinstance(resume.skills, list) else []
+        if isinstance(resume.skills, list):
+            resume_skills = resume.skills
+        elif isinstance(resume.skills, str):
+            try:
+                resume_skills = json.loads(resume.skills) if resume.skills else []
+            except Exception:
+                resume_skills = []
+        else:
+            resume_skills = []
+
+        if not resume_skills and resume.parsed_text:
+            resume_skills = extract_skills_from_text(resume.parsed_text)
         quality_scores = RecommendationEngine.calculate_resume_quality(
-            resume.parsed_text,
+            resume.parsed_text or "",
             resume_skills
         )
 
@@ -228,7 +252,7 @@ async def get_resume_quality(
         raise HTTPException(status_code=500, detail="Failed to calculate resume quality")
 
 
-@router.post("/recommendations/batch-index-jobs", status_code=status.HTTP_202_ACCEPTED)
+@router.post("/batch-index-jobs", status_code=status.HTTP_202_ACCEPTED)
 async def batch_index_jobs(
     background: bool = Query(True),
     db: AsyncSession = Depends(get_db)
@@ -303,7 +327,7 @@ async def batch_index_jobs(
         raise HTTPException(status_code=500, detail="Batch indexing failed")
 
 
-@router.get("/recommendations/batch-status/{task_id}")
+@router.get("/batch-status/{task_id}")
 async def get_batch_status(task_id: str):
     """
     Check status of a batch indexing task.

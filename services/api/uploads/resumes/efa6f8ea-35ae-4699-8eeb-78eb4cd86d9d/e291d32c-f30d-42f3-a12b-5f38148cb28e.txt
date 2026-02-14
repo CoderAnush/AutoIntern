@@ -1,0 +1,19 @@
+
+        John Doe
+        Software Engineer
+        
+        SKILLS:
+        - Python, JavaScript, React, Node.js
+        - Machine Learning, TensorFlow, PyTorch
+        - SQL, PostgreSQL, MongoDB
+        - AWS, Docker, Kubernetes
+        
+        EXPERIENCE:
+        Senior Software Engineer at Tech Corp (2020-Present)
+        - Developed scalable web applications
+        - Led team of 5 engineers
+        - Implemented CI/CD pipelines
+        
+        EDUCATION:
+        BS Computer Science, University of Technology (2016-2020)
+        

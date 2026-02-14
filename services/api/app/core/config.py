@@ -1,11 +1,15 @@
 from pydantic import BaseSettings, validator
 from typing import List
+import os
 
 class Settings(BaseSettings):
     class Config:
-        env_file = ".env"
+        # Load from .env file in the project root
+        env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
 
-    database_url: str = "postgresql+asyncpg://autointern:change-me@localhost/autointern"
+    # Use absolute path for SQLite database
+    _db_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "autointern.db")
+    database_url: str = f"sqlite+aiosqlite:///{_db_path}"  # Default to SQLite for local dev
     secret_key: str = "dev-secret-key-not-for-production"
     jwt_algorithm: str = "HS256"
     migrate_on_start: bool = False  # set to true in local dev to create tables on startup
@@ -13,7 +17,7 @@ class Settings(BaseSettings):
     # MinIO/S3 Configuration
     minio_endpoint: str = "localhost:9000"
     minio_access_key: str = "minioadmin"
-    minio_secret_key: str = "minioadmin"
+    minio_secret_key: str = "minioadmin123"
     minio_bucket_name: str = "resumes"
 
     # Resume configuration

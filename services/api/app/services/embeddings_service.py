@@ -2,6 +2,7 @@
 
 import logging
 import numpy as np
+import json
 from typing import List, Tuple, Optional
 from uuid import uuid4
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -117,7 +118,7 @@ class EmbeddingsManager:
                 parent_type="job",
                 parent_id=job_id,
                 model_name=self.MODEL_NAME,
-                vector=embedding_vector.tolist()  # Store as list in JSONB
+                vector=json.dumps(embedding_vector.tolist())  # Serialize to JSON string
             )
             db.add(embedding_record)
             await db.commit()
@@ -161,7 +162,7 @@ class EmbeddingsManager:
                 parent_type="resume",
                 parent_id=resume_id,
                 model_name=self.MODEL_NAME,
-                vector=embedding_vector.tolist()  # Store as list in JSONB
+                vector=json.dumps(embedding_vector.tolist())  # Serialize to JSON string
             )
             db.add(embedding_record)
             await db.commit()

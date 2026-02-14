@@ -57,21 +57,26 @@ async def register(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
     """
     try:
         # Phase 8: Rate limiting on registration endpoint
-        rate_limiter = await get_rate_limiter(settings.redis_url)
+        try:
+            rate_limiter = await get_rate_limiter(settings.redis_url)
 
-        is_allowed, count, reset_seconds = await rate_limiter.is_allowed(
-            key=f"register:{user_data.email.lower()}",
-            max_requests=RateLimitConfig.REGISTER_MAX_REQUESTS,
-            window_seconds=RateLimitConfig.REGISTER_WINDOW_SECONDS
-        )
-
-        if not is_allowed:
-            logger.warning(f"Registration rate limit exceeded for: {user_data.email}")
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Too many registration attempts. Try again in {reset_seconds} seconds.",
-                headers={"Retry-After": str(reset_seconds)}
+            is_allowed, count, reset_seconds = await rate_limiter.is_allowed(
+                key=f"register:{user_data.email.lower()}",
+                max_requests=RateLimitConfig.REGISTER_MAX_REQUESTS,
+                window_seconds=RateLimitConfig.REGISTER_WINDOW_SECONDS
             )
+
+            if not is_allowed:
+                logger.warning(f"Registration rate limit exceeded for: {user_data.email}")
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=f"Too many registration attempts. Try again in {reset_seconds} seconds.",
+                    headers={"Retry-After": str(reset_seconds)}
+                )
+        except HTTPException:
+            raise
+        except Exception as redis_err:
+            logger.warning(f"Rate limiter unavailable, skipping: {redis_err}")
 
         # Validate password strength
         is_valid_password, error_msg = PasswordValidator.validate_password(user_data.password)
@@ -176,21 +181,26 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
         email_lower = credentials.email.lower()
 
         # Phase 8: Rate limiting on login endpoint (5 per 5 minutes)
-        rate_limiter = await get_rate_limiter(settings.redis_url)
+        try:
+            rate_limiter = await get_rate_limiter(settings.redis_url)
 
-        is_allowed, count, reset_seconds = await rate_limiter.is_allowed(
-            key=f"login:{email_lower}",
-            max_requests=RateLimitConfig.LOGIN_MAX_REQUESTS,
-            window_seconds=RateLimitConfig.LOGIN_WINDOW_SECONDS
-        )
-
-        if not is_allowed:
-            logger.warning(f"Login rate limit exceeded for: {email_lower}")
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Too many login attempts. Try again in {reset_seconds} seconds.",
-                headers={"Retry-After": str(reset_seconds)}
+            is_allowed, count, reset_seconds = await rate_limiter.is_allowed(
+                key=f"login:{email_lower}",
+                max_requests=RateLimitConfig.LOGIN_MAX_REQUESTS,
+                window_seconds=RateLimitConfig.LOGIN_WINDOW_SECONDS
             )
+
+            if not is_allowed:
+                logger.warning(f"Login rate limit exceeded for: {email_lower}")
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=f"Too many login attempts. Try again in {reset_seconds} seconds.",
+                    headers={"Retry-After": str(reset_seconds)}
+                )
+        except HTTPException:
+            raise
+        except Exception as redis_err:
+            logger.warning(f"Rate limiter unavailable, skipping: {redis_err}")
 
         # Find user by email
         user_result = await db.execute(
@@ -256,7 +266,7 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Login error: {e}")
+        logger.error(f"Login error: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to process login"
@@ -409,21 +419,26 @@ async def change_password(
         user_id = current_user.get("user_id")
 
         # Phase 8: Rate limiting on password change endpoint (3 per hour)
-        rate_limiter = await get_rate_limiter(settings.redis_url)
+        try:
+            rate_limiter = await get_rate_limiter(settings.redis_url)
 
-        is_allowed, count, reset_seconds = await rate_limiter.is_allowed(
-            key=f"change_password:{user_id}",
-            max_requests=RateLimitConfig.PASSWORD_CHANGE_MAX_REQUESTS,
-            window_seconds=RateLimitConfig.PASSWORD_CHANGE_WINDOW_SECONDS
-        )
-
-        if not is_allowed:
-            logger.warning(f"Password change rate limit exceeded for user: {user_id}")
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Too many password change attempts. Try again in {reset_seconds} seconds.",
-                headers={"Retry-After": str(reset_seconds)}
+            is_allowed, count, reset_seconds = await rate_limiter.is_allowed(
+                key=f"change_password:{user_id}",
+                max_requests=RateLimitConfig.PASSWORD_CHANGE_MAX_REQUESTS,
+                window_seconds=RateLimitConfig.PASSWORD_CHANGE_WINDOW_SECONDS
             )
+
+            if not is_allowed:
+                logger.warning(f"Password change rate limit exceeded for user: {user_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=f"Too many password change attempts. Try again in {reset_seconds} seconds.",
+                    headers={"Retry-After": str(reset_seconds)}
+                )
+        except HTTPException:
+            raise
+        except Exception as redis_err:
+            logger.warning(f"Rate limiter unavailable, skipping: {redis_err}")
 
         user = await db.get(UserModel, user_id)
 
@@ -524,4 +539,120 @@ async def logout(current_user: dict = Depends(get_current_user)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to logout"
+        )
+
+
+@router.get("/preferences", response_model=dict)
+async def get_email_preferences(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get user's email notification preferences."""
+    try:
+        user_id = current_user.get("user_id")
+        user = await db.get(UserModel, user_id)
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        return {
+            "notify_on_new_jobs": user.notify_on_new_jobs,
+            "notify_on_resume_upload": user.notify_on_resume_upload,
+            "notify_on_password_change": user.notify_on_password_change,
+            "weekly_digest": user.weekly_digest,
+            "email_frequency": user.email_frequency
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving email preferences: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve preferences"
+        )
+
+
+@router.post("/preferences", response_model=dict)
+async def update_email_preferences(
+    preferences: dict,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update user's email notification preferences."""
+    try:
+        user_id = current_user.get("user_id")
+        user = await db.get(UserModel, user_id)
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        # Update only provided fields
+        if "notify_on_new_jobs" in preferences:
+            user.notify_on_new_jobs = preferences["notify_on_new_jobs"]
+        if "notify_on_resume_upload" in preferences:
+            user.notify_on_resume_upload = preferences["notify_on_resume_upload"]
+        if "notify_on_password_change" in preferences:
+            user.notify_on_password_change = preferences["notify_on_password_change"]
+        if "weekly_digest" in preferences:
+            user.weekly_digest = preferences["weekly_digest"]
+        if "email_frequency" in preferences:
+            user.email_frequency = preferences["email_frequency"]
+        
+        await db.commit()
+        
+        return {
+            "msg": "Preferences updated successfully",
+            "notify_on_new_jobs": user.notify_on_new_jobs,
+            "notify_on_resume_upload": user.notify_on_resume_upload,
+            "notify_on_password_change": user.notify_on_password_change,
+            "weekly_digest": user.weekly_digest,
+            "email_frequency": user.email_frequency
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating email preferences: {e}")
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update preferences"
+        )
+
+
+@router.get("/users/preferences", response_model=dict)
+async def get_email_preferences_alt(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get user's email notification preferences (alternate endpoint)."""
+    try:
+        user_id = current_user.get("user_id")
+        user = await db.get(UserModel, user_id)
+        
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+        
+        return {
+            "notify_on_new_jobs": user.notify_on_new_jobs,
+            "notify_on_resume_upload": user.notify_on_resume_upload,
+            "notify_on_password_change": user.notify_on_password_change,
+            "weekly_digest": user.weekly_digest,
+            "email_frequency": user.email_frequency
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving email preferences: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve preferences"
         )

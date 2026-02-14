@@ -40,28 +40,35 @@ except Exception as e:
 
 try:
     from app.routes import jobs
-    app.include_router(jobs.router, prefix="/api", tags=["jobs"])
+    app.include_router(jobs.router, prefix="/api/jobs", tags=["jobs"])
     logger.info("✓ Jobs router loaded")
 except Exception as e:
     logger.warning(f"✗ Jobs router failed: {e}")
 
 try:
     from app.routes import resumes
-    app.include_router(resumes.router, prefix="/api", tags=["resumes"])
+    app.include_router(resumes.router, prefix="/api/resumes", tags=["resumes"])
     logger.info("✓ Resumes router loaded")
 except Exception as e:
     logger.warning(f"✗ Resumes router failed: {e}")
 
 try:
+    from app.routes import applications
+    app.include_router(applications.router, prefix="/api/applications", tags=["applications"])
+    logger.info("✓ Applications router loaded")
+except Exception as e:
+    logger.warning(f"✗ Applications router failed: {e}")
+
+try:
     from app.routes import recommendations
-    app.include_router(recommendations.router, prefix="/api", tags=["recommendations"])
+    app.include_router(recommendations.router, prefix="/api/recommendations", tags=["recommendations"])
     logger.info("✓ Recommendations router loaded")
 except Exception as e:
     logger.warning(f"✗ Recommendations router failed: {e}")
 
 try:
     from app.routes import admin
-    app.include_router(admin.router, prefix="/api", tags=["admin"])
+    app.include_router(admin.router, prefix="/api/admin", tags=["admin"])
     logger.info("✓ Admin router loaded")
 except Exception as e:
     logger.warning(f"✗ Admin router failed: {e}")
@@ -74,12 +81,17 @@ async def startup_event():
     try:
         from app.db.session import engine
         from app.models.models import Base
+        from app.core.config import settings
 
-        logger.info("Creating database schema...")
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-
-        logger.info("Database schema initialized successfully")
+        # Skip table creation for SQLite local development (migrations handled separately)
+        if settings.database_url.startswith("sqlite"):
+            logger.info("Using SQLite - skipping automatic table creation (use seed script instead)")
+        else:
+            logger.info("Creating database schema...")
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            logger.info("Database schema initialized successfully")
+            
     except Exception as e:
         logger.error(f"Failed to initialize database schema on startup: {e}", exc_info=True)
 
@@ -100,7 +112,10 @@ async def metrics():
 @app.get("/metrics/summary")
 async def metrics_summary():
     """Get performance metrics summary (stub)."""
-    return {"metrics": "unavailable"}
+@app.get("/test-reload")
+async def test_reload():
+    """Test if server reloaded."""
+    return {"message": "Server reloaded successfully", "admin_loaded": "yes"}
 
 
 @app.on_event("shutdown")

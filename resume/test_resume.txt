@@ -1,0 +1,27 @@
+John Doe
+Python Developer
+Email: john.doe@example.com
+Phone: (555) 123-4567
+
+Summary:
+Experienced Python Developer with 5 years of experience in building backend services, APIs, and data processing pipelines. Proficient in FastAPI, Django, and cloud technologies.
+
+Skills:
+- Python, JavaScript
+- FastAPI, Django, Flask
+- SQL (PostgreSQL), NoSQL (MongoDB)
+- Docker, Kubernetes, AWS
+- Git, CI/CD
+
+Experience:
+Senior Python Developer | Tech Corp | 2020 - Present
+- Developed scalable RESTful APIs using FastAPI.
+- Optimized database queries for high-performance data processing.
+- Mentored junior developers and led code reviews.
+
+Software Engineer | StartUp Inc | 2018 - 2020
+- Built web applications using Django and React.
+- Implemented automated testing pipelines.
+
+Education:
+Bachelor of Science in Computer Science | University of Technology | 2014 - 2018

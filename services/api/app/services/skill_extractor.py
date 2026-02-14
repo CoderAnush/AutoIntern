@@ -26,18 +26,7 @@ def extract_skills_from_text(text: str) -> List[str]:
         return []
 
     try:
-        # Load spaCy model once
-        if _nlp_model is None:
-            import spacy
-            try:
-                _nlp_model = spacy.load("en_core_web_md")
-            except OSError:
-                logger.warning("spaCy model not found. Downloading...")
-                import subprocess
-                subprocess.run(["python", "-m", "spacy", "download", "en_core_web_md"])
-                _nlp_model = spacy.load("en_core_web_md")
-
-        # Extract skills using pattern matching + NER
+        # Extract skills using pattern matching
         skills = set()
 
         # Predefined skill patterns (case-insensitive)
@@ -81,12 +70,24 @@ def extract_skills_from_text(text: str) -> List[str]:
                 if pattern in text_lower:
                     skills.add(pattern.title())
 
-        # Use spaCy NER for additional extraction (organizations might contain skills)
-        doc = _nlp_model(text)
-        for ent in doc.ents:
-            if ent.label_ in ["PRODUCT", "ORG", "GPE"]:
-                # Additional skill detection could go here
-                pass
+        # Use spaCy NER for additional extraction (optional)
+        try:
+            if _nlp_model is None:
+                import spacy
+                try:
+                    _nlp_model = spacy.load("en_core_web_md")
+                except OSError:
+                    logger.warning("spaCy model not found. Skipping NER enrichment.")
+                    _nlp_model = None
+
+            if _nlp_model is not None:
+                doc = _nlp_model(text)
+                for ent in doc.ents:
+                    if ent.label_ in ["PRODUCT", "ORG", "GPE"]:
+                        # Additional skill detection could go here
+                        pass
+        except Exception as e:
+            logger.warning(f"spaCy enrichment skipped: {e}")
 
         # Return unique skills sorted alphabetically
         return sorted(list(skills)) if skills else []

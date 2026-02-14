@@ -56,3 +56,23 @@ async def health():
         return {"status": "ok", "message": "Database is ready"}
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Database error: {str(e)[:150]}")
+
+
+@router.post("/init/migrate-jobs", status_code=200, summary="Add new Job columns")
+async def migrate_jobs():
+    """Add company_name, apply_url, salary_range, job_type to jobs table."""
+    from app.db.session import engine
+    results = []
+    async with engine.begin() as conn:
+        for col, dtype in [
+            ("company_name", "VARCHAR(255)"),
+            ("apply_url", "VARCHAR(1024)"),
+            ("salary_range", "VARCHAR(255)"),
+            ("job_type", "VARCHAR(64)"),
+        ]:
+            try:
+                await conn.execute(text(f"ALTER TABLE jobs ADD COLUMN {col} {dtype}"))
+                results.append(f"Added {col}")
+            except Exception as e:
+                results.append(f"{col}: {str(e)[:80]}")
+    return {"results": results}
