@@ -66,6 +66,17 @@ async def verify_user_journey():
                 logger.error(f"❌ Upload Exception: {e}")
                 return False
 
+        # 2.5 Trigger Batch Indexing (Ensure jobs are indexed)
+        logger.info("⚙️ Triggering batch job indexing...")
+        try:
+            batch_resp = await client.post(f"{BASE_URL}/recommendations/batch-index-jobs?background=false")
+            if batch_resp.status_code == 200 or batch_resp.status_code == 202:
+                logger.info(f"✅ Batch Indexing Triggered: {batch_resp.json().get('msg')}")
+            else:
+                logger.warning(f"⚠️ Batch Indexing Failed: {batch_resp.status_code} - {batch_resp.text}")
+        except Exception as e:
+            logger.warning(f"⚠️ Batch Indexing Exception: {e}")
+
         # 3. Get Recommendations
         if not resume_id:
             logger.error("❌ No resume ID found/created.")
@@ -73,7 +84,8 @@ async def verify_user_journey():
             
         logger.info(f"🤖 Getting recommendations for resume {resume_id}...")
         try:
-            rec_resp = await client.get(f"{BASE_URL}/recommendations/jobs-for-resume/{resume_id}", headers=headers)
+            # Use low similarity threshold for testing with mock data
+            rec_resp = await client.get(f"{BASE_URL}/recommendations/jobs-for-resume/{resume_id}?min_similarity=0.0", headers=headers)
             if rec_resp.status_code == 200:
                 recommendations = rec_resp.json()
                 count = len(recommendations)
@@ -81,12 +93,15 @@ async def verify_user_journey():
                 
                 if count > 0:
                     top_job = recommendations[0]
-                    logger.info(f"🏆 Top Job: {top_job.get('title')} at {top_job.get('company_name')}")
-                    logger.info(f"🔗 Apply URL: {top_job.get('apply_url')}")
+                    # Note: API returns keys like job_title, company_name, apply_url
+                    title = top_job.get('job_title') or top_job.get('title')
+                    company = top_job.get('company_name')
+                    apply_url = top_job.get('apply_url')
                     
-                    # Verify URL is reachable (HEAD request)
-                    # Note: Localhost jobs might have fake URLs, strictly check if field exists
-                    if top_job.get('apply_url'):
+                    logger.info(f"🏆 Top Job: {title} at {company}")
+                    logger.info(f"🔗 Apply URL: {apply_url}")
+                    
+                    if apply_url:
                          logger.info("✅ Apply URL exists and user can be redirected.")
                     else:
                          logger.warning("⚠️ No Apply URL found for top job.")

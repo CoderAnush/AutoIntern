@@ -95,6 +95,19 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Failed to initialize database schema on startup: {e}", exc_info=True)
 
+    try:
+        from app.services.embeddings_service import EmbeddingsManager
+        from app.db.session import SessionLocal
+        
+        logger.info("Rebuilding FAISS index...")
+        db = SessionLocal()
+        mgr = EmbeddingsManager()
+        await mgr.rebuild_index_from_db(db)
+        await db.close()
+        logger.info("FAISS index rebuilt successfully")
+    except Exception as e:
+        logger.error(f"Failed to rebuild FAISS index: {e}")
+
 
 @app.middleware("http")
 async def metrics_middleware(request, call_next):

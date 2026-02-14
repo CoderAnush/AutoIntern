@@ -224,6 +224,8 @@ class RecommendationEngine:
                     "job_title": job.title,
                     "job_description": job.description[:500],  # Truncate for response
                     "job_location": job.location,
+                    "company_name": job.company_name,
+                    "apply_url": job.apply_url,
                     "resume_id": resume_id,
                     "similarity_score": float(composite_score),
                     "vector_similarity": float(vector_similarity_score),

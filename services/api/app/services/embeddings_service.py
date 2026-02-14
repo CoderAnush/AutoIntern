@@ -286,7 +286,7 @@ class EmbeddingsManager:
 
             # Rebuild index
             for idx, embedding_record in enumerate(embeddings):
-                embedding_vector = np.array(embedding_record.vector, dtype=np.float32)
+                embedding_vector = np.array(json.loads(embedding_record.vector), dtype=np.float32)
                 _faiss_index.add(np.array([embedding_vector]))
                 _idx_to_id_mapping[idx] = embedding_record.parent_id
                 _id_to_idx_mapping[embedding_record.parent_id] = idx

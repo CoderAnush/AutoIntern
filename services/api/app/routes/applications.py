@@ -20,19 +20,25 @@ async def create_application(
     """Create a new job application record."""
     try:
         user_id = current_user.get("user_id")
-        
+
         # Handle UUID conversion for both string and UUID types
         if isinstance(user_id, str):
             user_uuid = user_id
         else:
             user_uuid = str(user_id)
-        
+
+        # Create application with explicit UUID string conversions for SQLite
         new_application = ApplicationModel(
             id=str(uuid.uuid4()),
             user_id=user_uuid,
-            **application.dict()
+            job_id=str(application.job_id) if application.job_id else None,
+            resume_id=str(application.resume_id) if application.resume_id else None,
+            company_name=application.company_name,
+            role_title=application.role_title,
+            status=application.status,
+            notes=application.notes
         )
-        
+
         db.add(new_application)
         await db.commit()
         await db.refresh(new_application)
@@ -40,7 +46,7 @@ async def create_application(
     except Exception as e:
         await db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create application: {str(e)}"
         )
 

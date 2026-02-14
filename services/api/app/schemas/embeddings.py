@@ -35,6 +35,8 @@ class RecommendationResult(BaseModel):
     similarity_score: float  # 0.0-1.0 cosine similarity from FAISS
     matched_skills: List[str]  # Skills that appear in both resume and job
     skill_gaps: List[str]  # Required skills in job not found in resume
+    company_name: str = ""
+    apply_url: str = ""
 
     @validator('job_id', 'resume_id', pre=False)
     def convert_ids_to_string(cls, v):

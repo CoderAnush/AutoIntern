@@ -67,7 +67,7 @@ async def get_job_recommendations(
             raise HTTPException(status_code=404, detail="Resume embedding not found. Please regenerate recommendations.")
 
         # Convert embedding from list to numpy array
-        resume_embedding = np.array(embedding_record.vector, dtype=np.float32)
+        resume_embedding = np.array(json.loads(embedding_record.vector), dtype=np.float32)
         if isinstance(resume.skills, list):
             resume_skills = resume.skills
         elif isinstance(resume.skills, str):
@@ -101,6 +101,8 @@ async def get_job_recommendations(
                 job_title=r["job_title"],
                 job_description=r["job_description"],
                 job_location=r["job_location"],
+                company_name=r.get("company_name", ""),
+                apply_url=r.get("apply_url", ""),
                 resume_id=r["resume_id"],
                 similarity_score=r["similarity_score"],
                 matched_skills=r["matched_skills"],
@@ -156,7 +158,7 @@ async def get_resume_recommendations(
             raise HTTPException(status_code=404, detail="Job embedding not found. Please index the job first.")
 
         # Convert embedding from list to numpy array
-        job_embedding = np.array(embedding_record.vector, dtype=np.float32)
+        job_embedding = np.array(json.loads(embedding_record.vector), dtype=np.float32)
         job_skills = extract_skills_from_text(job.description) if job.description else []
 
         # Get embeddings manager and generate recommendations
