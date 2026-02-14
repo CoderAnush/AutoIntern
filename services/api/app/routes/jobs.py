@@ -16,7 +16,7 @@ router = APIRouter()
 @router.post("/", response_model=JobOut, status_code=status.HTTP_201_CREATED)
 async def create_job(payload: JobCreate, db: AsyncSession = Depends(get_db)):
     job = JobModel(
-        id=uuid.uuid4(),
+        id=str(uuid.uuid4()),
         source=payload.source,
         external_id=payload.external_id,
         title=payload.title,
