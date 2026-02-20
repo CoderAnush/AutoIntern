@@ -14,7 +14,7 @@ PASSWORD = "EmergencyPass123!"
 RESUME_PATH = r"c:\Users\anush\Desktop\AutoIntern\AutoIntern\resume\test_resume.txt"
 
 async def verify_user_journey():
-    async with httpx.AsyncClient(follow_redirects=True) as client:
+    async with httpx.AsyncClient(follow_redirects=True, timeout=120.0) as client:
         # 1. Login
         logger.info("🔐 Logging in...")
         try:
