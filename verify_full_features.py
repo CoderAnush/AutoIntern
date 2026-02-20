@@ -14,6 +14,7 @@ PASSWORD = "EmergencyPass123!"
 
 async def verify_features():
     async with httpx.AsyncClient(follow_redirects=True) as client:
+        
         # 1. Login
         logger.info("🔐 Testing Authentication...")
         try:

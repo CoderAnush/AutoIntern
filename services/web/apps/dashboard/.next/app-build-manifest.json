@@ -31,20 +31,15 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/layout.js"
     ],
-    "/(dashboard)/jobs/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/jobs/page.js"
-    ],
     "/(dashboard)/analyzer/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(dashboard)/analyzer/page.js"
     ],
-    "/(dashboard)/applications/page": [
+    "/(dashboard)/jobs/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/(dashboard)/applications/page.js"
+      "static/chunks/app/(dashboard)/jobs/page.js"
     ]
   }
 }
