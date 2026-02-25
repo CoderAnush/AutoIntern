@@ -1,42 +1,57 @@
 {
   "name": "AutoIntern API",
-  "description": "AI-powered job recommendation platform with security hardening",
+  "description": "AI-powered job recommendation platform",
   "builder": "dockerfile",
-  "buildCommand": "pip install -r services/api/requirements.txt",
-  "startCommand": "uvicorn services.api.app.main:app --host 0.0.0.0 --port $PORT",
-  "env": [
-    {
-      "name": "DATABASE_URL",
-      "description": "PostgreSQL connection string",
-      "required": true
-    },
-    {
-      "name": "SECRET_KEY",
-      "description": "JWT secret key (generate with: openssl rand -hex 32)",
-      "required": true
-    },
-    {
-      "name": "REDIS_URL",
-      "description": "Redis connection URL",
-      "required": true
-    },
-    {
-      "name": "SMTP_PASSWORD",
-      "description": "Email SMTP password",
-      "required": false
-    }
-  ],
-  "services": {
-    "postgres": {
-      "image": "postgres:15",
-      "environment": {
-        "POSTGRES_DB": "autointern",
-        "POSTGRES_USER": "autointern",
-        "POSTGRES_PASSWORD": "change-me-in-production"
+  "$schema": "https://railway.app/railway.schema.json",
+  "deploy": {
+    "dockerfilePath": "Dockerfile",
+    "healthcheckPath": "/health",
+    "restartPolicyType": "always"
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "DATABASE_URL": {
+          "description": "PostgreSQL connection string — auto-set when you add a Railway PostgreSQL service",
+          "required": true
+        },
+        "SECRET_KEY": {
+          "description": "JWT secret key — generate with: openssl rand -hex 32",
+          "required": true
+        },
+        "REDIS_URL": {
+          "description": "Redis connection URL — auto-set when you add a Railway Redis service",
+          "required": true
+        },
+        "GEMINI_API_KEY": {
+          "description": "Google Gemini API key from aistudio.google.com",
+          "required": true
+        },
+        "SMTP_HOST": {
+          "description": "SMTP server hostname",
+          "required": false
+        },
+        "SMTP_PORT": {
+          "description": "SMTP server port (587 for Gmail STARTTLS)",
+          "required": false
+        },
+        "SENDER_EMAIL": {
+          "description": "Email address to send notifications from",
+          "required": false
+        },
+        "SENDER_PASSWORD": {
+          "description": "Gmail App Password (16 chars) — NOT your account password",
+          "required": false
+        },
+        "CORS_ORIGINS": {
+          "description": "Comma-separated list of allowed frontend origins, e.g. https://your-app.vercel.app",
+          "required": false
+        },
+        "migrate_on_start": {
+          "description": "Set to 'true' on first deploy to create database tables, then set to 'false'",
+          "required": false
+        }
       }
-    },
-    "redis": {
-      "image": "redis:7"
     }
   }
 }

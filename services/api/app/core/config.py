@@ -35,10 +35,18 @@ class Settings(BaseSettings):
     require_lowercase: bool = True
 
     # CORS Configuration
-    cors_origins: List[str] = ["*"]  # Restrict in production
+    # In production, set CORS_ORIGINS env var to your Vercel URL:
+    # e.g. CORS_ORIGINS=https://autointern.vercel.app
+    cors_origins: str = "*"  # Comma-separated origins, or "*" for all
     cors_allow_credentials: bool = True
     cors_allow_methods: List[str] = ["*"]
     cors_allow_headers: List[str] = ["*"]
+
+    def get_cors_origins(self) -> List[str]:
+        """Parse CORS_ORIGINS env var: comma-separated string or single '*'"""
+        if self.cors_origins.strip() == "*":
+            return ["*"]
+        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
     # Email Configuration (Phase 7)
     smtp_host: str = "smtp.gmail.com"
@@ -51,6 +59,10 @@ class Settings(BaseSettings):
 
     # Admin Configuration
     admin_api_key: str = ""  # Set via environment variable for admin access
+
+    # AI Configuration (Gemini)
+    gemini_api_key: str = ""  # Set GEMINI_API_KEY in .env — get one free at aistudio.google.com
+
 
     @validator('database_url', pre=True)
     def _strip_database_url(cls, v):

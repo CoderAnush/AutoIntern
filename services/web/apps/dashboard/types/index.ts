@@ -40,7 +40,9 @@ export interface Application {
     notes?: string;
     job_id?: string;
     resume_id?: string;
+    apply_url?: string;
 }
+
 
 export interface ResumeData {
     id: string;

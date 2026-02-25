@@ -161,6 +161,56 @@ class APIClient {
         const res = await this.client.get("/health");
         return res.data;
     }
+
+    // ── User Preferences ─────────────────────────────────
+    async getPreferences() {
+        const res = await this.client.get("/api/preferences/");
+        return res.data;
+    }
+
+    async updatePreferences(data: Record<string, unknown>) {
+        const res = await this.client.put("/api/preferences/", data);
+        return res.data;
+    }
+
+    // ── Scheduler ─────────────────────────────────────────
+    async getSchedulerStatus() {
+        const res = await this.client.get("/api/scheduler/status");
+        return res.data;
+    }
+
+    async triggerSchedulerSync() {
+        const res = await this.client.post("/api/scheduler/trigger");
+        return res.data;
+    }
+
+    // ── Saved Jobs ────────────────────────────────────────
+    async getSavedJobs() {
+        const res = await this.client.get("/api/saved-jobs/");
+        return res.data;
+    }
+
+    async saveJob(jobId: string) {
+        const res = await this.client.post(`/api/saved-jobs/${jobId}`);
+        return res.data;
+    }
+
+    async unsaveJob(jobId: string) {
+        await this.client.delete(`/api/saved-jobs/${jobId}`);
+    }
+
+    // ── AI Features ───────────────────────────────────────
+    async generateCoverLetter(data: Record<string, unknown>) {
+        const res = await this.client.post("/api/ai/cover-letter", data);
+        return res.data;
+    }
+
+    async generateInterviewPrep(data: Record<string, unknown>) {
+        const res = await this.client.post("/api/ai/interview-prep", data);
+        return res.data;
+    }
 }
+
+
 
 export const apiClient = new APIClient();

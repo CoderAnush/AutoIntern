@@ -6,19 +6,25 @@ import Link from "next/link";
 import {
     LayoutDashboard, Briefcase, FileText, Kanban,
     MessageSquare, Settings, LogOut, Menu, X,
-    Bell, Search, Sparkles,
+    Bell, Search, Sparkles, BarChart3, Bookmark,
+    Mail, GraduationCap, Sun, Moon,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 import { apiClient } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTheme } from "next-themes";
 
 const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/jobs", label: "Find Jobs", icon: Briefcase },
+    { path: "/saved-jobs", label: "Saved Jobs", icon: Bookmark },
     { path: "/analyzer", label: "Resume Analyzer", icon: FileText },
     { path: "/applications", label: "Applications", icon: Kanban },
+    { path: "/cover-letter", label: "Cover Letter", icon: Mail },
+    { path: "/interview-prep", label: "Interview Prep", icon: GraduationCap },
+    { path: "/analytics", label: "Analytics", icon: BarChart3 },
     { path: "/assistant", label: "AI Assistant", icon: MessageSquare },
     { path: "/settings", label: "Settings", icon: Settings },
 ];
@@ -29,6 +35,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const pathname = usePathname();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [isInitialized, setIsInitialized] = useState(false);
+    const { theme, setTheme } = useTheme();
 
     useEffect(() => {
         const init = async () => {
@@ -121,11 +128,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             {navItems.find((i) => pathname === i.path || (i.path !== "/dashboard" && pathname.startsWith(i.path)))?.label || "Dashboard"}
                         </h1>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
                         <div className="relative hidden md:block">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input type="text" placeholder="Search..." className="h-9 w-64 bg-secondary/50 rounded-full pl-9 pr-4" />
                         </div>
+                        {/* Theme toggle */}
+                        <button
+                            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-colors"
+                            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                        >
+                            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                        </button>
                         <button className="relative p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-colors">
                             <Bell className="w-5 h-5" />
                             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary rounded-full border-2 border-background" />

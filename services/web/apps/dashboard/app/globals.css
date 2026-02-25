@@ -34,6 +34,37 @@
         --sidebar-ring: 263.4 70% 50.4%;
     }
 
+    /* Light theme — applied via next-themes class="light" on <html> */
+    .light {
+        --background: 0 0% 98%;
+        --foreground: 240 10% 8%;
+        --card: 0 0% 100%;
+        --card-foreground: 240 10% 8%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 240 10% 8%;
+        --primary: 263.4 70% 50.4%;
+        --primary-foreground: 0 0% 100%;
+        --secondary: 240 5% 92%;
+        --secondary-foreground: 240 10% 8%;
+        --muted: 240 5% 93%;
+        --muted-foreground: 240 5% 45%;
+        --accent: 240 5% 92%;
+        --accent-foreground: 240 10% 8%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 240 5% 86%;
+        --input: 240 5% 86%;
+        --ring: 263.4 70% 50.4%;
+        --sidebar-background: 240 8% 97%;
+        --sidebar-foreground: 240 10% 8%;
+        --sidebar-primary: 263.4 70% 50.4%;
+        --sidebar-primary-foreground: 0 0% 100%;
+        --sidebar-accent: 240 5% 91%;
+        --sidebar-accent-foreground: 240 10% 8%;
+        --sidebar-border: 240 5% 86%;
+        --sidebar-ring: 263.4 70% 50.4%;
+    }
+
     * {
         @apply border-border;
     }
