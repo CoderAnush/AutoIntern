@@ -137,3 +137,12 @@ async def shutdown_event():
     pass
 # Trigger rebuild
 # Env var fix deployed
+
+# Initialize and start daily email scheduler
+try:
+    from app.services.daily_email_scheduler import DailyEmailScheduler
+    _email_scheduler = DailyEmailScheduler()
+    _email_scheduler.start()
+    logger.info("Daily email scheduler initialized - emails at 6:00 AM to registered users")
+except Exception as e:
+    logger.warning(f"Email scheduler could not start: {e}")
