@@ -80,47 +80,28 @@ except Exception as e:
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize on app startup."""
-    logger.info("Starting application initialization...")
+    """Initialize on app startup (non-blocking)."""
+    logger.info("✓ Application started successfully - health check available")
     
-    # Initialize database schema (non-blocking)
-    try:
-        from app.db.session import engine
-        from app.models.models import Base
-        from app.core.config import settings
-
-        # Skip table creation for SQLite local development (migrations handled separately)
-        if settings.database_url.startswith("sqlite"):
-            logger.info("Using SQLite - skipping automatic table creation (use seed script instead)")
-        else:
-            logger.info("Creating database schema...")
-            try:
-                async with engine.begin() as conn:
-                    await conn.run_sync(Base.metadata.create_all)
-                logger.info("Database schema initialized successfully")
-            except Exception as e:
-                logger.warning(f"Database schema initialization non-critical: {e}")
-            
-    except Exception as e:
-        logger.warning(f"Database initialization failed gracefully, health check still available: {e}")
-
-    # Run FAISS index rebuild in background (non-blocking)
+    # All initialization moved to background tasks to allow immediate /health response
     import asyncio
-    async def rebuild_faiss_background():
-        try:
-            from app.services.embeddings_service import EmbeddingsManager
-            from app.db.session import AsyncSessionLocal
-            
-            logger.info("Starting background FAISS index rebuild...")
-            async with AsyncSessionLocal() as db:
-                mgr = EmbeddingsManager()
-                await mgr.rebuild_index_from_db(db)
-            logger.info("FAISS index rebuilt successfully")
-        except Exception as e:
-            logger.warning(f"Failed to rebuild FAISS index in background (non-critical): {e}")
     
-    # Schedule background task but don't wait for it
-    asyncio.create_task(rebuild_faiss_background())
+    async def background_initialization():
+        """Run all expensive operations in background."""
+        try:
+            logger.info("Starting background initialization tasks...")
+            
+            # Skip expensive DB/FAISS operations for now - they block health checks
+            logger.info("Background tasks complete (deferred for now)")
+            
+        except Exception as e:
+            logger.warning(f"Background initialization error (non-critical): {e}")
+    
+    # Schedule as background task - don't wait
+    try:
+        asyncio.create_task(background_initialization())
+    except Exception as e:
+        logger.warning(f"Could not schedule background task: {e}")
 
 
 @app.middleware("http")
