@@ -82,6 +82,8 @@ except Exception as e:
 async def startup_event():
     """Initialize on app startup."""
     logger.info("Starting application initialization...")
+    
+    # Initialize database schema (non-blocking)
     try:
         from app.db.session import engine
         from app.models.models import Base
@@ -92,25 +94,33 @@ async def startup_event():
             logger.info("Using SQLite - skipping automatic table creation (use seed script instead)")
         else:
             logger.info("Creating database schema...")
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-            logger.info("Database schema initialized successfully")
+            try:
+                async with engine.begin() as conn:
+                    await conn.run_sync(Base.metadata.create_all)
+                logger.info("Database schema initialized successfully")
+            except Exception as e:
+                logger.warning(f"Database schema initialization non-critical: {e}")
             
     except Exception as e:
-        logger.error(f"Failed to initialize database schema on startup: {e}", exc_info=True)
+        logger.warning(f"Database initialization failed gracefully, health check still available: {e}")
 
-    try:
-        from app.services.embeddings_service import EmbeddingsManager
-        from app.db.session import SessionLocal
-        
-        logger.info("Rebuilding FAISS index...")
-        db = SessionLocal()
-        mgr = EmbeddingsManager()
-        await mgr.rebuild_index_from_db(db)
-        await db.close()
-        logger.info("FAISS index rebuilt successfully")
-    except Exception as e:
-        logger.error(f"Failed to rebuild FAISS index: {e}")
+    # Run FAISS index rebuild in background (non-blocking)
+    import asyncio
+    async def rebuild_faiss_background():
+        try:
+            from app.services.embeddings_service import EmbeddingsManager
+            from app.db.session import AsyncSessionLocal
+            
+            logger.info("Starting background FAISS index rebuild...")
+            async with AsyncSessionLocal() as db:
+                mgr = EmbeddingsManager()
+                await mgr.rebuild_index_from_db(db)
+            logger.info("FAISS index rebuilt successfully")
+        except Exception as e:
+            logger.warning(f"Failed to rebuild FAISS index in background (non-critical): {e}")
+    
+    # Schedule background task but don't wait for it
+    asyncio.create_task(rebuild_faiss_background())
 
 
 @app.middleware("http")
