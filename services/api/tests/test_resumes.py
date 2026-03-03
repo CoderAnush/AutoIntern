@@ -146,7 +146,7 @@ class TestResumeConfigurationIntegration(unittest.TestCase):
 
         self.assertEqual(settings.minio_endpoint, "localhost:9000")
         self.assertEqual(settings.minio_access_key, "minioadmin")
-        self.assertEqual(settings.minio_secret_key, "minioadmin")
+        self.assertEqual(settings.minio_secret_key, "minioadmin123")
         self.assertEqual(settings.minio_bucket_name, "resumes")
         self.assertEqual(settings.max_resume_size_mb, 10)
 

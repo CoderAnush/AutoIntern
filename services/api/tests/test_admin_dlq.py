@@ -2,11 +2,11 @@ import os
 import pytest
 pytest.importorskip('aioredis')
 from fastapi.testclient import TestClient
-from services.api.app.main import app
+from app.main import app
 from app.core.config import settings
 
 client = TestClient(app)
-REDIS_URL = f"redis://{settings.redis_host}:{settings.redis_port}"
+REDIS_URL = settings.redis_url or "redis://localhost:6379/0"
 
 @pytest.mark.skipif(not os.getenv('ADMIN_API_KEY'), reason='ADMIN_API_KEY not set')
 def test_list_and_requeue_delete(monkeypatch):
