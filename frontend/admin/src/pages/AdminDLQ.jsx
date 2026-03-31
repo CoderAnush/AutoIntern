@@ -15,7 +15,7 @@ export default function AdminDLQ() {
     setLoading(true)
     setError(null)
     try {
-      const res = await axios.get('/admin/dlq?count=100', { headers: token ? { 'X-Admin-Token': token } : {} })
+      const res = await axios.get('/api/admin/dlq?count=100', { headers: token ? { 'X-Admin-Token': token } : {} })
       setItems(res.data.items || [])
     } catch (err) {
       setError(err.message)
@@ -26,7 +26,7 @@ export default function AdminDLQ() {
 
   async function requeue(index) {
     try {
-      await axios.post('/admin/dlq/requeue', { index }, { headers: token ? { 'X-Admin-Token': token } : {} })
+      await axios.post('/api/admin/dlq/requeue', { index }, { headers: token ? { 'X-Admin-Token': token } : {} })
       fetchItems()
     } catch (err) {
       setError(err.message)
@@ -35,7 +35,7 @@ export default function AdminDLQ() {
 
   async function removeItem(index) {
     try {
-      await axios.delete('/admin/dlq', { params: { index }, headers: token ? { 'X-Admin-Token': token } : {} })
+      await axios.delete('/api/admin/dlq', { params: { index }, headers: token ? { 'X-Admin-Token': token } : {} })
       fetchItems()
     } catch (err) {
       setError(err.message)
