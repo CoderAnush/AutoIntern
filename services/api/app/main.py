@@ -14,7 +14,7 @@ app = FastAPI(title="AutoIntern API", version="0.1.0")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,9 +30,9 @@ app.include_router(health.router)
 try:
     from app.routes import admin_init
     app.include_router(admin_init.router)
-    logger.info("Initialization endpoints loaded")
+    logger.info("✓ Initialization endpoints loaded")
 except Exception as e:
-    logger.warning(f"Failed to load initialization endpoints: {e}")
+    logger.warning(f"✗ Initialization endpoints failed: {e}")
 
 # Try to include feature routers (they may fail if external services are unavailable)
 try:
@@ -82,21 +82,18 @@ except Exception as e:
 async def startup_event():
     """Initialize on app startup (non-blocking)."""
     logger.info("✓ Application started successfully - health check available")
-    
-    # All initialization moved to background tasks to allow immediate /health response
+
     import asyncio
-    
+
     async def background_initialization():
         """Run all expensive operations in background."""
         try:
             logger.info("Starting background initialization tasks...")
-            
-            # Skip expensive DB/FAISS operations for now - they block health checks
-            logger.info("Background tasks complete (deferred for now)")
-            
+            logger.info("Background tasks complete")
+
         except Exception as e:
             logger.warning(f"Background initialization error (non-critical): {e}")
-    
+
     # Schedule as background task - don't wait
     try:
         asyncio.create_task(background_initialization())
@@ -120,6 +117,9 @@ async def metrics():
 @app.get("/metrics/summary")
 async def metrics_summary():
     """Get performance metrics summary (stub)."""
+    return {"metrics": "placeholder"}
+
+
 @app.get("/test-reload")
 async def test_reload():
     """Test if server reloaded."""
@@ -130,14 +130,53 @@ async def test_reload():
 async def shutdown_event():
     """Cleanup on app shutdown."""
     pass
-# Trigger rebuild
-# Env var fix deployed
+
 
 # Initialize and start daily email scheduler
 try:
     from app.services.daily_email_scheduler import DailyEmailScheduler
     _email_scheduler = DailyEmailScheduler()
     _email_scheduler.start()
-    logger.info("Daily email scheduler initialized - emails at 6:00 AM to registered users")
+    logger.info("✓ Daily email scheduler initialized - emails at 6:00 AM to registered users")
 except Exception as e:
-    logger.warning(f"Email scheduler could not start: {e}")
+    logger.warning(f"⚠️ Email scheduler could not start: {e}")
+
+# Initialize and start daily job scraper scheduler
+_job_scheduler = None
+try:
+    from app.services.daily_job_scheduler import DailyJobScheduler
+    from app.routes.admin import set_job_scheduler
+    _job_scheduler = DailyJobScheduler(hour=None, minute=0)  # Run hourly at :00
+    set_job_scheduler(_job_scheduler)
+    _job_scheduler.start()
+    logger.info("✓ Daily job scheduler initialized - scraping fresh jobs every hour at :00")
+
+    # Trigger immediate scrape on startup if jobs table is empty
+    import asyncio
+    from app.db.session import AsyncSessionLocal
+    from sqlalchemy import select
+    from app.models.models import Job as JobModel
+
+    async def _immediate_scrape_if_empty():
+        """Check if jobs table is empty and trigger immediate scrape."""
+        try:
+            async with AsyncSessionLocal() as db:
+                result = await db.execute(select(JobModel.id))
+                job_count = len(result.scalars().all())
+
+                if job_count == 0:
+                    logger.info("📌 Jobs table is empty - triggering immediate scrape on startup...")
+                    _job_scheduler.run_daily_scrape()
+                else:
+                    logger.info(f"✓ Database has {job_count} jobs already")
+        except Exception as e:
+            logger.warning(f"Could not check job count on startup: {e}")
+
+    # Schedule the check as a background task
+    try:
+        asyncio.create_task(_immediate_scrape_if_empty())
+    except Exception as e:
+        logger.warning(f"Could not schedule immediate scrape check: {e}")
+
+except Exception as e:
+    logger.warning(f"⚠️ Job scheduler could not start: {e}")
