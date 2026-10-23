@@ -1,7 +1,11 @@
 def test_db_session_importable():
-    # Skip test if SQLAlchemy isn't installed (optional dependency in dev)
+    import os
     import pytest
+    # Skip test if SQLAlchemy isn't installed (optional dependency in dev)
     pytest.importorskip('sqlalchemy')
+    # Requires either psycopg2 (PostgreSQL) or aiosqlite (SQLite) to be importable.
+    # Set SQLite URL so the session module doesn't need psycopg2.
+    os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test_db_import.db")
 
     # sanity-check: the db session module should import and expose an engine
     # Ensure services/api is on sys.path so `app` package is importable

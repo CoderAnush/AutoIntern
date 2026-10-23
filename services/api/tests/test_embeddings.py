@@ -7,6 +7,10 @@ from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 
+# Skip the entire module if sentence-transformers is not installed.
+# These tests require ~2 GB of ML model weights and are optional in dev.
+pytest.importorskip("sentence_transformers", reason="sentence-transformers not installed — skipping embedding tests")
+
 from app.schemas.embeddings import EmbeddingOut, RecommendationResult, ResumeQualityScore
 from app.services.embeddings_service import EmbeddingsManager
 from app.services.recommendation_service import RecommendationEngine

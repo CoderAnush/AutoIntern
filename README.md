@@ -1,303 +1,184 @@
 # AutoIntern AI
 
-**An AI-powered job & internship aggregation and recommendation platform for students and entry-level engineers.**
-
-## 📊 Project Status
-
-- **Completion:** 60% MVP (infrastructure complete) → 100% Feature-Complete Product
-- **Timeline:** 10 weeks to full launch
-- **Stack:** FastAPI, Scrapy, React, PostgreSQL, Redis, Elasticsearch, Sentence-BERT
-
-**Already Built:**
-- ✅ Production-ready API (FastAPI)
-- ✅ Redis queue + DLQ system
-- ✅ Worker service (processes jobs)
-- ✅ React admin UI
-- ✅ Prometheus + Grafana monitoring
-- ✅ CI/CD pipeline
-- ✅ Docker Compose orchestration
-
-**Remaining Work:**
-- 🚧 Web scrapers (Indeed, Wellfound, etc.)
-- 🚧 Resume parsing & skill extraction
-- 🚧 AI embeddings & job recommendations
-- 🚧 User authentication & dashboard
-- 🚧 Email notifications
-- 🚧 Kubernetes deployment
+**AI-powered job-search platform.** Collects real jobs from 30+ company career sites (Greenhouse, Lever, RemoteOK), matches them against your resume, and emails a personalised digest every day at 7:00 AM IST.
 
 ---
 
-## 🚀 Quick Start
+## Architecture
 
-### 1. Read the Guides
-- **[QUICK_START.md](./QUICK_START.md)** — Executive summary + dev workflow
-- **[IMPLEMENTATION_ROADMAP.md](./IMPLEMENTATION_ROADMAP.md)** — 10-week phase-by-phase plan
-- **[.github/copilot-instructions.md](./.github/copilot-instructions.md)** — Architecture for AI agents
+```
+Job Sources (Greenhouse API / Lever API / RemoteOK API)
+    ↓  hourly via APScheduler
+FastAPI Backend  →  PostgreSQL
+    ↓
+Matching engine (skill overlap + FAISS / Sentence-BERT)
+    ↓
+7 AM IST daily digest  →  SMTP email
+    ↓
+Next.js Dashboard  (auth · jobs · applications · settings)
+```
 
-### 2. Setup Local Environment
+---
+
+## Quick start (Docker)
+
 ```bash
-# Copy environment template
+# 1. Copy and edit env vars
 cp .env.example .env
+# Set SECRET_KEY, SMTP credentials, ADMIN_API_KEY
 
-# Start all services (Docker required)
+# 2. Start all services
 docker compose up --build
 
-# In another terminal, run migrations
+# 3. Run database migrations
 docker compose exec api alembic -c alembic.ini upgrade head
 
-# Verify setup
-curl http://localhost:8000/health  # API health check
-open http://localhost:8000/docs     # API docs
-```
-
-### 3. Start Development
-```bash
-# Create feature branch
-git checkout -b dev/your-feature-name
-
-# Follow IMPLEMENTATION_ROADMAP.md for Phase 1 (If starting with spiders)
-# or Phase 5 (If starting with auth)
-
-# Run tests
-pytest -q
+# 4. Verify
+curl http://localhost:8000/health
+open http://localhost:8000/docs
+open http://localhost:3000          # dashboard
 ```
 
 ---
 
-## 📂 Directory Structure
+## Quick start (local dev, no Docker)
+
+### Backend
+
+```bash
+cd services/api
+python -m venv .venv
+# Windows:
+.venv\Scripts\activate
+# macOS/Linux:
+source .venv/bin/activate
+
+pip install -r requirements.txt
+cp ../../.env.example ../../.env    # edit DATABASE_URL → sqlite+aiosqlite:///./autointern.db
+
+uvicorn app.main:app --reload --port 8000
+# Database tables are created automatically on first run
+```
+
+### Frontend
+
+```bash
+cd services/web/apps/dashboard
+cp .env.example .env.local          # defaults to http://localhost:8000
+npm install
+npm run dev                         # opens http://localhost:3000
+```
+
+---
+
+## Job sources
+
+30 real companies are configured out of the box using **public, unauthenticated** APIs:
+
+| Adapter    | How it works                                   | Companies (examples)                    |
+|------------|------------------------------------------------|-----------------------------------------|
+| Greenhouse | `boards-api.greenhouse.io/v1/boards/{token}`   | Stripe, Airbnb, GitHub, Figma, Databricks… |
+| Lever      | `api.lever.co/v0/postings/{token}`             | Airtable, Retool, PagerDuty…            |
+| RemoteOK   | `remoteok.com/api` (public JSON)               | All remote tech roles                   |
+
+Add new companies by editing `services/api/app/services/job_sources.py` → `COMPANY_REGISTRY`.
+
+---
+
+## Email notifications
+
+- **Schedule:** 7:00 AM IST (Asia/Kolkata) every day
+- **Content:** top matching jobs from the last 7 days, scored by skill overlap
+- **Requires:** `SMTP_HOST`, `SMTP_PORT`, `SENDER_EMAIL`, `SENDER_PASSWORD` in `.env`
+- **Test:** `POST /api/admin/trigger-scrape` (requires `X-Admin-Token` header)
+
+---
+
+## Directory structure
 
 ```
 AutoIntern/
 ├── services/
-│   ├── api/              # FastAPI REST backend (job CRUD, admin endpoints)
-│   ├── worker/           # Async Redis consumer (processes jobs)
-│   ├── scraper/          # Scrapy + Playwright spiders (to implement)
-│   ├── processor/        # Resume parsing + skill extraction (scaffolded)
-│   ├── ai_engine/        # Embeddings & recommendations (scaffolded)
-│   ├── notifications/    # Email alerts (scaffolded)
-│   └── alert_receiver/   # Alertmanager webhook receiver
-├── frontend/
-│   └── admin/            # React admin dashboard (DLQ management)
-├── infra/
-│   ├── prometheus/       # Metrics & alert rules
-│   ├── grafana/          # Dashboards
-│   └── alertmanager/     # Alert routing
-├── tests/                # Integration tests
-├── scripts/              # CLI tools (dlq_cli, push_dlq, etc.)
-├── docs/                 # Architecture docs
-└── docker-compose.yml    # Local dev orchestration
+│   ├── api/                    # FastAPI backend
+│   │   ├── app/
+│   │   │   ├── main.py         # App startup, scheduler init
+│   │   │   ├── routes/         # HTTP endpoints
+│   │   │   ├── services/
+│   │   │   │   ├── job_sources.py          # Greenhouse / Lever / RemoteOK adapters
+│   │   │   │   ├── job_dedup.py            # Deduplication + upsert
+│   │   │   │   ├── daily_job_scheduler.py  # Hourly job ingestion
+│   │   │   │   ├── daily_email_scheduler.py # 7 AM IST digest
+│   │   │   │   ├── recommendation_service.py
+│   │   │   │   └── email_service.py
+│   │   │   └── models/         # SQLAlchemy ORM models
+│   │   └── alembic/            # Database migrations
+│   ├── web/apps/dashboard/     # Next.js 14 + TypeScript + Tailwind
+│   ├── worker/                 # Redis worker (DLQ processing)
+│   └── scraper/                # Scrapy spiders (legacy, kept for future use)
+├── infra/                      # Prometheus + Grafana + Alertmanager
+├── docker-compose.yml
+└── .env.example
 ```
 
 ---
 
-## 📚 System Architecture
+## API reference
 
-```
-Job Sources (Spiders)
-    ↓
-Redis Queue (ingest:jobs)
-    ↓
-Worker Service (async consumer)
-    ↓ (on success)
-┌─────────────────────────────────┐
-│ PostgreSQL + Elasticsearch      │
-│ (storage + full-text search)    │
-└─────────────────────────────────┘
-    ↓
-Prometheus (metrics)
-    ↓
-Grafana (dashboards)
-    ↓
-API → React Dashboard (job search, recommendations)
-```
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/health` | Health check |
+| POST | `/api/auth/register` | Create account |
+| POST | `/api/auth/login` | Get JWT tokens |
+| GET | `/api/jobs/` | List all jobs (paginated) |
+| GET | `/api/jobs/search?q=…` | Search jobs |
+| POST | `/api/resumes/` | Upload resume (PDF/DOCX/TXT) |
+| GET | `/api/recommendations/jobs-for-resume/{id}` | AI-matched jobs |
+| GET | `/api/applications/` | Saved/tracked applications |
+| POST | `/api/admin/trigger-scrape` | Trigger job ingestion now (admin) |
+| POST | `/api/admin/generate-embeddings` | Rebuild FAISS index |
 
-**Key Features:**
-- **Retry Logic:** Jobs retry 3 times; failed jobs move to DLQ
-- **Deduplication:** Prevents duplicate job entries via signature hashing
-- **Full-Text Search:** Elasticsearch indexes all jobs (title, description, company)
-- **Recommendations:** Sentence-BERT embeddings + cosine similarity matching
-- **Monitoring:** Real-time metrics, alerts for failures
-- **Admin Tools:** UI for inspecting/requeuing failed jobs
+Full docs: `http://localhost:8000/docs`
 
 ---
 
-## 🎯 Next Steps
+## Environment variables
 
-### Option 1: Data Pipeline (Recommended for MVP)
-**Phase 1 (Week 1-2):** Implement 5 job portal spiders
-- Indeed (highest volume)
-- Wellfound (startup internships)
-- RemoteOK (remote work)
-- WeWorkRemotely (tech remote)
-- LinkedIn (via API only)
+See `.env.example` for all options with descriptions.
 
-**Result:** 50k+ searchable tech jobs
-
-### Option 2: User Features (Recommended if starting fresh)
-**Phase 5 (Week 5-6):** Build authentication + login UI
-- JWT tokens + local authentication
-- React login form
-- User dashboard
-
-**Result:** Users can register, login, browse jobs
-
-### Option 3: AI Features
-**Phase 4 (Week 4-5):** Add job recommendations
-- Sentence-BERT embeddings
-- FAISS indexing
-- Cosine similarity matching
-
-**Result:** Personalized job recommendations
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `DATABASE_URL` | ✓ | PostgreSQL or SQLite URL |
+| `SECRET_KEY` | ✓ | JWT signing key (min 32 chars) |
+| `ADMIN_API_KEY` | ✓ | Protects `/api/admin/*` |
+| `SMTP_HOST` | email | SMTP server (e.g. smtp.gmail.com) |
+| `SMTP_PORT` | email | Usually 587 |
+| `SENDER_EMAIL` | email | From address |
+| `SENDER_PASSWORD` | email | App-specific password |
+| `REDIS_URL` | workers | Redis for DLQ; optional for API |
 
 ---
 
-## 🔧 Development
+## Running tests
 
-### Running Services Locally
-
-**Just the API:**
 ```bash
 cd services/api
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-export DATABASE_URL="postgresql+asyncpg://autointern:change-me@localhost:5432/autointern"
-uvicorn app.main:app --reload
+pytest -q                           # unit + integration tests
+pytest tests/test_auth.py -v        # single file
 ```
 
-**Run Scraper:**
-```bash
-cd services/scraper
-playwright install  # One-time setup
-scrapy crawl <spider_name>
-```
+---
 
-**Run Worker:**
-```bash
-cd services/worker
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python worker.py
-```
-
-### Testing
-
-```bash
-# Unit + Integration tests
-pytest -q
-
-# E2E tests (requires services running)
-cd frontend/admin
-npm run cypress:run
-
-# Specific test
-pytest tests/test_health.py -v
-```
-
-### Database Migrations
+## Database migrations
 
 ```bash
 cd services/api
 
-# Generate migration (auto-detect model changes)
-alembic revision --autogenerate -m "add new field"
+# Auto-generate from model changes
+alembic revision --autogenerate -m "describe change"
 
-# Apply migrations
+# Apply
 alembic upgrade head
 
-# Rollback
+# Rollback one step
 alembic downgrade -1
 ```
-
----
-
-## 📊 Monitoring & Debugging
-
-### Check System Health
-```bash
-# API
-curl http://localhost:8000/health
-curl http://localhost:8000/metrics
-
-# Worker
-curl http://localhost:8001/metrics
-
-# Queue status
-docker compose exec redis redis-cli LLEN ingest:jobs
-
-# Elasticsearch
-curl http://localhost:9200/_cluster/health
-
-# Prometheus
-open http://localhost:9090
-
-# Grafana
-open http://localhost:3000 (admin/admin)
-```
-
-### View Logs
-```bash
-docker compose logs api -f       # API service
-docker compose logs worker -f    # Worker service
-docker compose logs postgres -f  # Database
-```
-
----
-
-## 🔐 Security & Legal
-
-- **Never commit secrets** — Use `.env` (ignored by git)
-- **Admin token** — Keep `ADMIN_API_KEY` private
-- **Scraper compliance** — Document site ToS in `docs/legal.md`
-- **Resume data** — Treat as PII; encrypt at rest in production
-
----
-
-## 📈 Development Roadmap
-
-See **[IMPLEMENTATION_ROADMAP.md](./IMPLEMENTATION_ROADMAP.md)** for detailed breakdown:
-
-| Phase | Feature | Weeks | Status |
-|-------|---------|-------|--------|
-| 1 | Job Portal Spiders | 2 | 🚧 Ready to start |
-| 2 | Additional Spiders | 1 | 🚧 |
-| 3 | Resume Upload & Skills | 2 | 🚧 |
-| 4 | Embeddings & Recommendations | 1 | 🚧 |
-| 5 | JWT Auth & Login | 1 | 🚧 |
-| 6 | Job Dashboard UI | 1 | 🚧 |
-| 7 | Email Notifications | 1 | 🚧 |
-| 8 | Security Hardening | 1 | 🚧 |
-| 9 | Kubernetes Deployment | 1 | 🚧 |
-
----
-
-## 🤝 Contributing
-
-1. Create a feature branch: `git checkout -b dev/feature-name`
-2. Follow patterns in [.github/copilot-instructions.md](./.github/copilot-instructions.md)
-3. Write tests for new features
-4. Open a PR with description of changes
-5. Do NOT commit directly to main
-
----
-
-## 📞 Support
-
-### Documentation
-- **Architecture:** See `docs/` directory
-- **API Docs:** http://localhost:8000/docs (when running locally)
-- **Monitoring:** See Grafana dashboards at http://localhost:3000
-
-### Common Issues
-See [QUICK_START.md](./QUICK_START.md) troubleshooting section
-
----
-
-## 📄 License
-
-[To be determined]
-
----
-
-**Starting development? Read [QUICK_START.md](./QUICK_START.md) first!** 🚀

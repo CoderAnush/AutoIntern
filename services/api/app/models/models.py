@@ -55,6 +55,7 @@ class Job(Base):
     apply_url = Column(String(1024), nullable=True)
     salary_range = Column(String(255), nullable=True)
     job_type = Column(String(64), nullable=True)
+    is_india_job = Column(Boolean, nullable=True, default=False, index=True)
 
 class Resume(Base):
     __tablename__ = "resumes"
@@ -106,6 +107,31 @@ class EmailLog(Base):
     retries = Column(Integer, default=0, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
+
+class UserProfile(Base):
+    """Per-user job-search preferences for personalised matching."""
+    __tablename__ = "user_profiles"
+    id = Column(UUIDType, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(UUIDType, ForeignKey("users.id"), unique=True, nullable=False, index=True)
+    # Job search preferences
+    target_roles = Column(Text, nullable=True)           # JSON list of role titles
+    preferred_locations = Column(Text, nullable=True)    # JSON list of cities/countries
+    skills = Column(Text, nullable=True)                 # JSON list of tech skills
+    graduation_year = Column(Integer, nullable=True)     # e.g. 2027
+    experience_level = Column(String(64), nullable=True) # fresher, entry, mid, senior
+    work_mode = Column(String(32), nullable=True)        # onsite, hybrid, remote, any
+    salary_min_lpa = Column(Integer, nullable=True)      # minimum desired salary in LPA (Indian units)
+    preferred_job_types = Column(Text, nullable=True)    # JSON list: Full-time, Internship, Contract …
+    open_to_remote = Column(Boolean, default=True, nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+class SavedJob(Base):
+    """Jobs bookmarked by a user."""
+    __tablename__ = "saved_jobs"
+    id = Column(UUIDType, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(UUIDType, ForeignKey("users.id"), nullable=False, index=True)
+    job_id = Column(UUIDType, ForeignKey("jobs.id"), nullable=False)
+    saved_at = Column(DateTime(timezone=True), server_default=func.now())
 
 class RequestLog(Base):
     """Request logging and audit trail (Phase 8)."""

@@ -30,7 +30,7 @@ const navItems = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { user, isAuthenticated, accessToken, setUser, clearAuth } = useAuthStore();
+    const { user, isAuthenticated, accessToken, _hasHydrated, setUser, clearAuth } = useAuthStore();
     const router = useRouter();
     const pathname = usePathname();
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -38,6 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const { theme, setTheme } = useTheme();
 
     useEffect(() => {
+        if (!_hasHydrated) return;
         const init = async () => {
             if (!accessToken) { router.replace("/login"); return; }
             if (!user) {
@@ -46,7 +47,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             setIsInitialized(true);
         };
         init();
-    }, [accessToken, user, router, clearAuth, setUser]);
+    }, [_hasHydrated, accessToken, user, router, clearAuth, setUser]);
 
     if (!isInitialized) {
         return (

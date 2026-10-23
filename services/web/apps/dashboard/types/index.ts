@@ -16,6 +16,7 @@ export interface Job {
     apply_url?: string;
     salary_range?: string;
     job_type?: string;
+    is_india_job?: boolean;
 }
 
 export interface RecommendedJob {

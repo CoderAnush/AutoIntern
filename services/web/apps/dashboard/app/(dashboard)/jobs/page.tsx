@@ -413,7 +413,14 @@ export default function JobsPage() {
                                         <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {job.location}</span>
                                     )}
                                     {job.salary_range && (
-                                        <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" /> {job.salary_range}</span>
+                                        <span className="flex items-center gap-1">
+                                            {job.salary_range.startsWith("₹") ? (
+                                                <span className="text-[10px] font-semibold leading-none">₹</span>
+                                            ) : (
+                                                <DollarSign className="w-3 h-3" />
+                                            )}
+                                            {job.salary_range}
+                                        </span>
                                     )}
                                 </div>
 

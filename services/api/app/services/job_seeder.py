@@ -1,128 +1,389 @@
-"""Job seeder with realistic jobs from top-tier companies."""
+"""
+India-first job seeder — sample data from top Indian IT companies.
+
+Salaries are expressed in INR (Indian Rupees) using LPA (Lakh Per Annum) format.
+Apply URLs point to the actual careers pages of each company.
+This is seed / demo data, not live job postings.
+"""
 
 import uuid
 from datetime import datetime, timedelta
 import random
 
+# Indian IT companies with verified careers pages
 COMPANIES = [
-    {"name": "Google", "career_url": "https://careers.google.com", "locations": ["Mountain View, CA", "New York, NY", "London, UK", "Bangalore, India"]},
-    {"name": "Microsoft", "career_url": "https://careers.microsoft.com", "locations": ["Redmond, WA", "New York, NY", "Bangalore, India", "Dublin, Ireland"]},
-    {"name": "Amazon", "career_url": "https://www.amazon.jobs", "locations": ["Seattle, WA", "Arlington, VA", "Austin, TX", "Vancouver, Canada"]},
-    {"name": "Meta", "career_url": "https://www.metacareers.com", "locations": ["Menlo Park, CA", "New York, NY", "London, UK", "Singapore"]},
-    {"name": "Apple", "career_url": "https://jobs.apple.com", "locations": ["Cupertino, CA", "Austin, TX", "London, UK", "Shanghai, China"]},
-    {"name": "Netflix", "career_url": "https://jobs.netflix.com", "locations": ["Los Gatos, CA", "Los Angeles, CA", "London, UK", "Remote"]},
-    {"name": "Tesla", "career_url": "https://www.tesla.com/careers", "locations": ["Austin, TX", "Fremont, CA", "Berlin, Germany", "Shanghai, China"]},
-    {"name": "NVIDIA", "career_url": "https://www.nvidia.com/en-us/about-nvidia/careers", "locations": ["Santa Clara, CA", "Austin, TX", "Bangalore, India", "Remote"]},
-    {"name": "Stripe", "career_url": "https://stripe.com/jobs", "locations": ["San Francisco, CA", "New York, NY", "Dublin, Ireland", "Remote"]},
-    {"name": "Spotify", "career_url": "https://www.lifeatspotify.com", "locations": ["Stockholm, Sweden", "New York, NY", "London, UK", "Remote"]},
-    {"name": "Salesforce", "career_url": "https://careers.salesforce.com", "locations": ["San Francisco, CA", "Indianapolis, IN", "London, UK", "Hyderabad, India"]},
-    {"name": "Adobe", "career_url": "https://careers.adobe.com", "locations": ["San Jose, CA", "New York, NY", "Bangalore, India", "Remote"]},
-    {"name": "Uber", "career_url": "https://www.uber.com/careers", "locations": ["San Francisco, CA", "New York, NY", "Amsterdam, Netherlands", "Bangalore, India"]},
-    {"name": "Airbnb", "career_url": "https://careers.airbnb.com", "locations": ["San Francisco, CA", "Remote"]},
-    {"name": "Goldman Sachs", "career_url": "https://www.goldmansachs.com/careers", "locations": ["New York, NY", "London, UK", "Bangalore, India", "Dallas, TX"]},
-    {"name": "JPMorgan Chase", "career_url": "https://careers.jpmorgan.com", "locations": ["New York, NY", "Chicago, IL", "London, UK", "Bangalore, India"]},
-    {"name": "Deloitte", "career_url": "https://www2.deloitte.com/careers", "locations": ["New York, NY", "Chicago, IL", "London, UK", "Hyderabad, India"]},
+    {
+        "name": "TCS",
+        "career_url": "https://www.tcs.com/careers",
+        "locations": ["Mumbai, India", "Pune, India", "Bengaluru, India", "Chennai, India", "Hyderabad, India"],
+        "is_india": True,
+    },
+    {
+        "name": "Infosys",
+        "career_url": "https://career.infosys.com",
+        "locations": ["Bengaluru, India", "Pune, India", "Hyderabad, India", "Chennai, India", "Mysuru, India"],
+        "is_india": True,
+    },
+    {
+        "name": "Wipro",
+        "career_url": "https://careers.wipro.com",
+        "locations": ["Bengaluru, India", "Hyderabad, India", "Pune, India", "Chennai, India", "Kolkata, India"],
+        "is_india": True,
+    },
+    {
+        "name": "HCLTech",
+        "career_url": "https://www.hcltech.com/careers",
+        "locations": ["Noida, India", "Chennai, India", "Bengaluru, India", "Hyderabad, India", "Pune, India"],
+        "is_india": True,
+    },
+    {
+        "name": "Tech Mahindra",
+        "career_url": "https://careers.techmahindra.com",
+        "locations": ["Pune, India", "Hyderabad, India", "Bengaluru, India", "Noida, India", "Chennai, India"],
+        "is_india": True,
+    },
+    {
+        "name": "Freshworks",
+        "career_url": "https://www.freshworks.com/company/careers",
+        "locations": ["Chennai, India", "Bengaluru, India", "Hyderabad, India"],
+        "is_india": True,
+    },
+    {
+        "name": "Zoho",
+        "career_url": "https://www.zoho.com/careers.html",
+        "locations": ["Chennai, India", "Bengaluru, India", "Coimbatore, India"],
+        "is_india": True,
+    },
+    {
+        "name": "Razorpay",
+        "career_url": "https://razorpay.com/jobs",
+        "locations": ["Bengaluru, India", "Remote - India"],
+        "is_india": True,
+    },
+    {
+        "name": "CRED",
+        "career_url": "https://careers.cred.club",
+        "locations": ["Bengaluru, India", "Remote - India"],
+        "is_india": True,
+    },
+    {
+        "name": "BrowserStack",
+        "career_url": "https://www.browserstack.com/careers",
+        "locations": ["Mumbai, India", "Bengaluru, India", "Remote - India"],
+        "is_india": True,
+    },
+    {
+        "name": "Postman",
+        "career_url": "https://www.postman.com/company/careers",
+        "locations": ["Bengaluru, India", "Remote - India"],
+        "is_india": True,
+    },
+    {
+        "name": "Swiggy",
+        "career_url": "https://careers.swiggy.com",
+        "locations": ["Bengaluru, India", "Hyderabad, India", "Remote - India"],
+        "is_india": True,
+    },
+    {
+        "name": "Zomato",
+        "career_url": "https://www.zomato.com/careers",
+        "locations": ["Gurugram, India", "Bengaluru, India", "Remote - India"],
+        "is_india": True,
+    },
+    {
+        "name": "Meesho",
+        "career_url": "https://meesho.io/jobs",
+        "locations": ["Bengaluru, India", "Remote - India"],
+        "is_india": True,
+    },
+    {
+        "name": "PhonePe",
+        "career_url": "https://www.phonepe.com/en/careers.html",
+        "locations": ["Bengaluru, India", "Pune, India"],
+        "is_india": True,
+    },
+    {
+        "name": "Delhivery",
+        "career_url": "https://www.delhivery.com/careers",
+        "locations": ["Gurugram, India", "Bengaluru, India", "Delhi, India"],
+        "is_india": True,
+    },
+    {
+        "name": "Druva",
+        "career_url": "https://www.druva.com/company/careers",
+        "locations": ["Pune, India", "Bengaluru, India", "Remote - India"],
+        "is_india": True,
+    },
+    {
+        "name": "Chargebee",
+        "career_url": "https://www.chargebee.com/careers",
+        "locations": ["Chennai, India", "Bengaluru, India", "Remote - India"],
+        "is_india": True,
+    },
+    {
+        "name": "Persistent Systems",
+        "career_url": "https://www.persistent.com/careers",
+        "locations": ["Pune, India", "Nagpur, India", "Bengaluru, India", "Hyderabad, India"],
+        "is_india": True,
+    },
+    {
+        "name": "Mphasis",
+        "career_url": "https://careers.mphasis.com",
+        "locations": ["Bengaluru, India", "Pune, India", "Chennai, India"],
+        "is_india": True,
+    },
 ]
 
+# India-appropriate job templates with INR salaries
 JOB_TEMPLATES = [
     {
-        "title": "Software Engineer Intern",
-        "job_type": "Internship",
-        "salary_range": "$30-50/hr",
-        "description": "Join our engineering team as a Software Engineer Intern. You'll work on real production systems, collaborate with senior engineers, and contribute to projects used by millions. Requirements: Currently pursuing a BS/MS in Computer Science or related field. Proficiency in at least one programming language (Python, Java, C++, JavaScript). Strong problem-solving skills. Experience with data structures and algorithms. Familiarity with version control (Git)."
-    },
-    {
-        "title": "Data Science Intern",
-        "job_type": "Internship",
-        "salary_range": "$35-55/hr",
-        "description": "As a Data Science Intern, you'll analyze large datasets, build machine learning models, and derive actionable insights. Requirements: Pursuing MS/PhD in Statistics, Computer Science, or related quantitative field. Proficiency in Python and SQL. Experience with pandas, scikit-learn, or TensorFlow. Strong statistical analysis skills. Excellent communication skills for presenting findings."
-    },
-    {
-        "title": "Frontend Developer",
+        "title": "Software Engineer — Fresher",
         "job_type": "Full-time",
-        "salary_range": "$120k-160k/yr",
-        "description": "Build beautiful, responsive user interfaces that delight millions of users. You'll work with React, TypeScript, and modern web technologies. Requirements: 2+ years experience with React or similar frameworks. Strong TypeScript/JavaScript skills. Experience with CSS-in-JS, Tailwind, or similar. Understanding of web performance optimization. Experience with testing frameworks (Jest, Cypress)."
+        "salary_range": "₹3.5–6 LPA",
+        "description": (
+            "We are hiring B.E./B.Tech/MCA graduates (2024 or 2025 passout) to join our software engineering team. "
+            "You will work on building and maintaining production systems alongside senior engineers.\n\n"
+            "Requirements:\n"
+            "- B.E./B.Tech in Computer Science, IT, or Electronics (2024/2025 batch)\n"
+            "- Strong fundamentals in data structures and algorithms\n"
+            "- Proficiency in at least one language: Java, Python, or C++\n"
+            "- Familiarity with SQL and basic DBMS concepts\n"
+            "- CGPA 6.5 and above preferred\n\n"
+            "Bond: No bond. Permanent employment from day one."
+        ),
     },
     {
-        "title": "Backend Engineer",
+        "title": "Software Development Engineer (SDE-1)",
         "job_type": "Full-time",
-        "salary_range": "$130k-180k/yr",
-        "description": "Design and build scalable backend services that power our platform. You'll work with microservices, databases, and cloud infrastructure. Requirements: 3+ years experience with Python, Go, or Java. Experience with PostgreSQL, Redis, or MongoDB. Familiarity with Docker, Kubernetes, and CI/CD. Understanding of RESTful API design. Experience with distributed systems."
+        "salary_range": "₹8–14 LPA",
+        "description": (
+            "Looking for 0–2 years of experience engineers for our product engineering team. "
+            "You will design, build, and ship features used by millions of users.\n\n"
+            "Requirements:\n"
+            "- 0–2 years of software engineering experience\n"
+            "- Strong problem-solving and data structures skills\n"
+            "- Experience with Java, Python, or Go\n"
+            "- Familiarity with REST APIs and microservices\n"
+            "- Experience with Git and CI/CD pipelines\n"
+        ),
     },
     {
-        "title": "Machine Learning Engineer",
+        "title": "Software Development Engineer (SDE-2)",
         "job_type": "Full-time",
-        "salary_range": "$150k-220k/yr",
-        "description": "Develop and deploy ML models at scale. You'll work on recommendation systems, NLP, or computer vision. Requirements: MS/PhD in ML, AI, or related field. 3+ years experience with PyTorch or TensorFlow. Strong Python skills. Experience with ML infrastructure (MLflow, Kubeflow). Published research is a plus."
+        "salary_range": "₹18–30 LPA",
+        "description": (
+            "We are looking for a mid-level SDE to join our engineering team. "
+            "You will lead feature development, mentor junior engineers, and drive technical decisions.\n\n"
+            "Requirements:\n"
+            "- 2–5 years of software engineering experience\n"
+            "- Strong system design and distributed systems knowledge\n"
+            "- Proficiency in Java, Python, Go, or Kotlin\n"
+            "- Experience with cloud platforms (AWS, GCP, or Azure)\n"
+            "- Experience with Docker and Kubernetes\n"
+        ),
     },
     {
-        "title": "Product Manager Intern",
-        "job_type": "Internship",
-        "salary_range": "$35-50/hr",
-        "description": "Drive product strategy and execution as a PM Intern. You'll work with engineering, design, and business teams. Requirements: Pursuing MBA or BS in technical/business field. Strong analytical and communication skills. Experience with data analysis tools. Ability to define product requirements. Interest in technology and user experience."
-    },
-    {
-        "title": "DevOps Engineer",
+        "title": "Frontend Engineer",
         "job_type": "Full-time",
-        "salary_range": "$125k-170k/yr",
-        "description": "Build and maintain our cloud infrastructure and deployment pipelines. Requirements: 2+ years experience with AWS, GCP, or Azure. Proficiency in Terraform, Ansible, or CloudFormation. Experience with Docker and Kubernetes. Strong Linux administration skills. Experience with monitoring tools (Prometheus, Grafana, Datadog)."
+        "salary_range": "₹12–22 LPA",
+        "description": (
+            "Build beautiful, performant web experiences for our users. "
+            "You will work with React, TypeScript, and our design system to ship product features.\n\n"
+            "Requirements:\n"
+            "- 1–4 years of frontend development experience\n"
+            "- Strong JavaScript/TypeScript skills\n"
+            "- Proficiency with React or Vue\n"
+            "- Understanding of web performance (Core Web Vitals)\n"
+            "- Experience with CSS frameworks and responsive design\n"
+        ),
     },
     {
-        "title": "Mobile Developer",
+        "title": "Backend Engineer — Python",
         "job_type": "Full-time",
-        "salary_range": "$130k-175k/yr",
-        "description": "Build native mobile experiences for iOS and Android. Requirements: 2+ years experience with Swift/Kotlin or React Native/Flutter. Understanding of mobile UI/UX best practices. Experience with RESTful APIs. App Store/Play Store publishing experience. Strong debugging and optimization skills."
-    },
-    {
-        "title": "Security Engineer",
-        "job_type": "Full-time",
-        "salary_range": "$140k-200k/yr",
-        "description": "Protect our platform and users from security threats. Requirements: 3+ years in cybersecurity or application security. Experience with penetration testing, vulnerability assessment. Knowledge of OWASP Top 10. Familiarity with security tools (Burp Suite, Nessus). Experience with cloud security (AWS/GCP)."
-    },
-    {
-        "title": "UX Designer Intern",
-        "job_type": "Internship",
-        "salary_range": "$28-45/hr",
-        "description": "Design intuitive user experiences for our products. Requirements: Pursuing degree in Design, HCI, or related field. Proficiency in Figma or Sketch. Strong portfolio demonstrating UX process. Understanding of user research methods. Basic prototyping skills."
+        "salary_range": "₹14–25 LPA",
+        "description": (
+            "Design and build scalable backend services. "
+            "You will work with Python, PostgreSQL, and cloud infrastructure to power our platform.\n\n"
+            "Requirements:\n"
+            "- 2–5 years of backend engineering experience\n"
+            "- Strong Python skills (FastAPI, Django, or Flask)\n"
+            "- PostgreSQL/MySQL database design experience\n"
+            "- Knowledge of Redis, Celery, and message queues\n"
+            "- Experience deploying on AWS or GCP\n"
+        ),
     },
     {
         "title": "Data Engineer",
         "job_type": "Full-time",
-        "salary_range": "$130k-175k/yr",
-        "description": "Build and maintain data pipelines that power our analytics and ML systems. Requirements: 2+ years experience with Python and SQL. Experience with Apache Spark, Airflow, or similar. Proficiency with cloud data services (BigQuery, Redshift). Understanding of data modeling and ETL. Experience with streaming data (Kafka, Kinesis)."
+        "salary_range": "₹15–28 LPA",
+        "description": (
+            "Build and maintain data pipelines that power our analytics and ML systems.\n\n"
+            "Requirements:\n"
+            "- 2–4 years of data engineering experience\n"
+            "- Strong SQL and Python skills\n"
+            "- Experience with Apache Spark, Airflow, or Flink\n"
+            "- Familiarity with BigQuery, Redshift, or Snowflake\n"
+            "- Understanding of data modelling and ETL patterns\n"
+        ),
     },
     {
-        "title": "Cloud Solutions Architect",
+        "title": "Machine Learning Engineer",
         "job_type": "Full-time",
-        "salary_range": "$160k-230k/yr",
-        "description": "Design cloud-native architectures for enterprise customers. Requirements: 5+ years cloud architecture experience. AWS/GCP/Azure certifications preferred. Experience with serverless, containers, and microservices. Strong communication and client-facing skills. Experience with cost optimization strategies."
+        "salary_range": "₹20–40 LPA",
+        "description": (
+            "Build and deploy ML models at scale for recommendation, search, and fraud detection.\n\n"
+            "Requirements:\n"
+            "- M.Tech/M.S. in CS/AI/ML or 3+ years practical ML experience\n"
+            "- Strong Python and PyTorch/TensorFlow skills\n"
+            "- Experience with ML pipelines and MLOps (MLflow, SageMaker, or Vertex AI)\n"
+            "- Solid statistics and probability foundation\n"
+            "- Experience with large-scale data processing (Spark, Beam)\n"
+        ),
+    },
+    {
+        "title": "DevOps / Platform Engineer",
+        "job_type": "Full-time",
+        "salary_range": "₹16–28 LPA",
+        "description": (
+            "Manage and improve our cloud infrastructure, CI/CD pipelines, and developer tooling.\n\n"
+            "Requirements:\n"
+            "- 2–5 years of DevOps / SRE experience\n"
+            "- Strong Kubernetes and Helm chart experience\n"
+            "- AWS/GCP/Azure certified preferred\n"
+            "- Proficiency with Terraform and infrastructure-as-code\n"
+            "- Experience with Prometheus, Grafana, and on-call workflows\n"
+        ),
+    },
+    {
+        "title": "Mobile Engineer — Android",
+        "job_type": "Full-time",
+        "salary_range": "₹14–24 LPA",
+        "description": (
+            "Build native Android experiences for millions of users in India.\n\n"
+            "Requirements:\n"
+            "- 2–4 years of Android development (Kotlin/Java)\n"
+            "- Experience with Jetpack Compose and MVVM architecture\n"
+            "- Strong understanding of Android performance optimisation\n"
+            "- Familiarity with Firebase, Retrofit, and Room\n"
+            "- Published apps on the Play Store preferred\n"
+        ),
+    },
+    {
+        "title": "Product Manager",
+        "job_type": "Full-time",
+        "salary_range": "₹22–40 LPA",
+        "description": (
+            "Drive product strategy and execution for one of our core product areas.\n\n"
+            "Requirements:\n"
+            "- MBA or B.Tech with 2+ years PM experience\n"
+            "- Strong analytical and data-driven decision-making skills\n"
+            "- Excellent cross-functional communication\n"
+            "- Experience with A/B testing and growth metrics\n"
+            "- Prior engineering or design background is a plus\n"
+        ),
+    },
+    {
+        "title": "Software Engineering Intern",
+        "job_type": "Internship",
+        "salary_range": "₹40,000–80,000/mo",
+        "description": (
+            "6-month internship for pre-final or final year B.Tech/BE students. "
+            "Work on real product features alongside full-time engineers.\n\n"
+            "Requirements:\n"
+            "- Pre-final or final year B.Tech/BE/MCA\n"
+            "- Good DSA fundamentals (LeetCode medium level)\n"
+            "- At least one language: Python, Java, or C++\n"
+            "- Prior project work or open-source contributions are a plus\n"
+            "- Minimum 6 months availability\n"
+        ),
+    },
+    {
+        "title": "Data Science Intern",
+        "job_type": "Internship",
+        "salary_range": "₹30,000–60,000/mo",
+        "description": (
+            "6-month data science internship for M.Tech/M.S./final-year students.\n\n"
+            "Requirements:\n"
+            "- Pursuing M.Tech, M.S., or final-year B.Tech in CS/AI/Statistics\n"
+            "- Proficiency in Python, pandas, scikit-learn\n"
+            "- Experience with SQL and data analysis\n"
+            "- Familiarity with NLP or computer vision is a plus\n"
+            "- Strong communication skills for presenting findings\n"
+        ),
+    },
+    {
+        "title": "Site Reliability Engineer (SRE)",
+        "job_type": "Full-time",
+        "salary_range": "₹18–32 LPA",
+        "description": (
+            "Ensure reliability, availability, and performance of our systems at scale.\n\n"
+            "Requirements:\n"
+            "- 2–5 years of SRE or infrastructure engineering experience\n"
+            "- Strong Linux and networking fundamentals\n"
+            "- Experience with incident management and postmortem culture\n"
+            "- Proficiency in Python or Go for automation\n"
+            "- Kubernetes, Prometheus, and distributed tracing experience\n"
+        ),
+    },
+    {
+        "title": "Security Engineer",
+        "job_type": "Full-time",
+        "salary_range": "₹20–38 LPA",
+        "description": (
+            "Protect our platform, users, and data from security threats.\n\n"
+            "Requirements:\n"
+            "- 3+ years in application or cloud security\n"
+            "- Experience with VAPT, threat modelling, and secure code review\n"
+            "- OSCP, CEH, or equivalent certification preferred\n"
+            "- Knowledge of OWASP Top 10 and CWE standards\n"
+            "- Familiarity with AWS/GCP security controls\n"
+        ),
+    },
+    {
+        "title": "UX Designer",
+        "job_type": "Full-time",
+        "salary_range": "₹12–22 LPA",
+        "description": (
+            "Design intuitive, delightful user experiences for millions of users.\n\n"
+            "Requirements:\n"
+            "- 2–4 years of UX/product design experience\n"
+            "- Strong portfolio demonstrating end-to-end design process\n"
+            "- Proficiency in Figma\n"
+            "- Experience conducting user research and usability testing\n"
+            "- Good understanding of accessibility standards (WCAG)\n"
+        ),
     },
 ]
 
 
-def generate_seed_jobs():
-    """Generate a list of job dicts ready for DB insertion."""
+def generate_seed_jobs() -> list[dict]:
+    """Generate seed jobs from Indian IT companies with INR salaries."""
     jobs = []
     now = datetime.utcnow()
 
     for company in COMPANIES:
-        # Each company gets 3-4 random job templates
-        templates = random.sample(JOB_TEMPLATES, min(random.randint(3, 4), len(JOB_TEMPLATES)))
+        num_jobs = random.randint(3, 5)
+        templates = random.sample(JOB_TEMPLATES, min(num_jobs, len(JOB_TEMPLATES)))
         for tmpl in templates:
             location = random.choice(company["locations"])
-            days_ago = random.randint(0, 30)
+            days_ago = random.randint(0, 21)
             jobs.append({
                 "id": str(uuid.uuid4()),
                 "source": "seed",
                 "external_id": f"seed-{uuid.uuid4().hex[:8]}",
                 "title": tmpl["title"],
-                "description": f"{tmpl['description']}\n\nAbout {company['name']}: We're looking for talented individuals to join our team at {company['name']}. This role is based in {location}.",
+                "description": (
+                    f"{tmpl['description']}\n\n"
+                    f"About {company['name']}: This role is based in {location}. "
+                    f"Apply at: {company['career_url']}"
+                ),
                 "location": location,
                 "company_name": company["name"],
                 "apply_url": company["career_url"],
                 "salary_range": tmpl["salary_range"],
                 "job_type": tmpl["job_type"],
                 "posted_at": (now - timedelta(days=days_ago)).isoformat(),
+                "is_india_job": company["is_india"],
             })
 
     return jobs

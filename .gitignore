@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 *.pyd
 venv/
+.venv/
 .env
 .env.*
 !.env.example
@@ -17,10 +18,24 @@ venv/
 *.log
 *.err
 
+# Temp files from editor sessions
+tmpclaude-*
+test-results/
+*.last-run.json
+
 # Node
 node_modules/
 .next/
-.next
+dist/
+
+# Build artifacts
+*.pack.gz
+*.pack.gz.old
+
+# Python packaging
+*.egg-info/
+dist/
+build/
 
 # Docker
 docker-compose.override.yml
@@ -31,3 +46,12 @@ docker-compose.override.yml
 # OS
 .DS_Store
 Thumbs.db
+
+# Test outputs
+test_results*.txt
+*_test_results*.txt
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!playwright.config.json

@@ -48,6 +48,17 @@ class Settings(BaseSettings):
             return ["*"]
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
 
+    @property
+    def CORS_ORIGINS(self) -> List[str]:
+        """Alias used in main.py."""
+        return self.get_cors_origins()
+
+    @property
+    def database_url_sync(self) -> str:
+        """Synchronous DB URL for Alembic/session."""
+        url = self.database_url
+        return url.replace("+asyncpg", "").replace("+aiosqlite", "")
+
     # Email Configuration (Phase 7)
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587

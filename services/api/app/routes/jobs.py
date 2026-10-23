@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, case
 from app.schemas.job import JobCreate, JobOut
 from app.db.session import get_db
 from app.models.models import Job as JobModel, Embedding as EmbeddingModel
@@ -9,6 +9,9 @@ from app.services.embeddings_service import EmbeddingsManager
 from app.services.job_seeder import generate_seed_jobs
 import uuid
 from datetime import datetime
+
+# India-first sort expression: is_india_job=True rows come first
+_INDIA_FIRST = case((JobModel.is_india_job == True, 1), else_=0).desc()
 
 router = APIRouter()
 
@@ -56,7 +59,7 @@ async def list_jobs(
         else:
             q = await db.execute(
                 select(JobModel)
-                .order_by(JobModel.posted_at.desc().nullslast())
+                .order_by(_INDIA_FIRST, JobModel.posted_at.desc().nullslast())
                 .limit(limit)
                 .offset(offset)
             )
@@ -91,7 +94,7 @@ async def search_jobs(
         stmt = stmt.where(JobModel.location.ilike(f"%{location}%"))
     if job_type:
         stmt = stmt.where(JobModel.job_type.ilike(f"%{job_type}%"))
-    stmt = stmt.order_by(JobModel.posted_at.desc().nullslast()).limit(limit)
+    stmt = stmt.order_by(_INDIA_FIRST, JobModel.posted_at.desc().nullslast()).limit(limit)
     result = await db.execute(stmt)
     return result.scalars().all()
 
@@ -123,6 +126,7 @@ async def seed_jobs(db: AsyncSession = Depends(get_db)):
             salary_range=j["salary_range"],
             job_type=j["job_type"],
             posted_at=datetime.fromisoformat(j["posted_at"]) if j.get("posted_at") else None,
+            is_india_job=bool(j.get("is_india_job", False)),
         )
         db.add(job)
         count += 1

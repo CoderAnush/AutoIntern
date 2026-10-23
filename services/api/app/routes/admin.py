@@ -17,6 +17,15 @@ router = APIRouter()
 DLQ_KEY = "ingest:dlq"
 QUEUE_KEY = "ingest:jobs"
 
+# Holds the scheduler instance set at startup
+_job_scheduler = None
+
+
+def set_job_scheduler(scheduler) -> None:
+    """Called from main.py startup to register the job scheduler instance."""
+    global _job_scheduler
+    _job_scheduler = scheduler
+
 async def require_admin(x_admin_token: Optional[str] = Header(None)):
     if not settings.admin_api_key:
         raise HTTPException(status_code=403, detail="Admin API not configured")
@@ -56,6 +65,29 @@ async def delete_item(index: int, redis=Depends(get_redis)):
         raise HTTPException(status_code=404, detail="item not found")
     await redis.lrem(DLQ_KEY, 1, raw)
     return {"status": "deleted", "index": index}
+
+
+@router.post("/trigger-scrape", status_code=status.HTTP_202_ACCEPTED, dependencies=[Depends(require_admin)])
+async def trigger_scrape(background_tasks: BackgroundTasks):
+    """Immediately trigger a job ingestion run in the background."""
+    if _job_scheduler is None:
+        raise HTTPException(status_code=503, detail="Job scheduler not initialized")
+    background_tasks.add_task(_job_scheduler.run_daily_scrape)
+    return {"message": "Job ingestion triggered in background"}
+
+
+@router.get("/sources")
+async def list_sources():
+    """List all configured job source companies (no auth required for monitoring)."""
+    from app.services.job_sources import COMPANY_REGISTRY
+    return {
+        "count": len(COMPANY_REGISTRY),
+        "sources": [
+            {"name": c["name"], "adapter": c["adapter"],
+             "token": c.get("board_token", c.get("url", ""))}
+            for c in COMPANY_REGISTRY
+        ],
+    }
 
 
 @router.post("/generate-embeddings", status_code=status.HTTP_202_ACCEPTED)

@@ -26,6 +26,7 @@ class JobOut(BaseModel):
     apply_url: Optional[str] = None
     salary_range: Optional[str] = None
     job_type: Optional[str] = None
+    is_india_job: Optional[bool] = False
 
     @validator('id', pre=False)
     def convert_id_to_string(cls, v):

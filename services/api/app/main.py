@@ -77,28 +77,106 @@ try:
 except Exception as e:
     logger.warning(f"✗ Admin router failed: {e}")
 
+try:
+    from app.routes import emails
+    app.include_router(emails.router, prefix="/api", tags=["emails"])
+    logger.info("✓ Emails router loaded")
+except Exception as e:
+    logger.warning(f"✗ Emails router failed: {e}")
+
+try:
+    from app.routes import preferences
+    app.include_router(preferences.router, prefix="/api", tags=["preferences"])
+    logger.info("✓ Preferences router loaded")
+except Exception as e:
+    logger.warning(f"✗ Preferences router failed: {e}")
+
+try:
+    from app.routes import saved_jobs
+    app.include_router(saved_jobs.router, prefix="/api", tags=["saved-jobs"])
+    logger.info("✓ Saved-jobs router loaded")
+except Exception as e:
+    logger.warning(f"✗ Saved-jobs router failed: {e}")
+
+try:
+    from app.routes import ai_features
+    app.include_router(ai_features.router, prefix="/api", tags=["ai"])
+    logger.info("✓ AI features router loaded")
+except Exception as e:
+    logger.warning(f"✗ AI features router failed: {e}")
+
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize on app startup (non-blocking)."""
     logger.info("✓ Application started successfully - health check available")
 
-    import asyncio
-
-    async def background_initialization():
-        """Run all expensive operations in background."""
+    # Auto-run migrations if configured (useful for dev/SQLite)
+    if settings.migrate_on_start:
         try:
-            logger.info("Starting background initialization tasks...")
-            logger.info("Background tasks complete")
-
+            from alembic.config import Config
+            from alembic import command
+            import os
+            alembic_ini = os.path.join(os.path.dirname(__file__), "..", "alembic.ini")
+            alembic_cfg = Config(alembic_ini)
+            command.upgrade(alembic_cfg, "head")
+            logger.info("✓ Database migrations applied")
         except Exception as e:
-            logger.warning(f"Background initialization error (non-critical): {e}")
+            logger.warning(f"Auto-migration failed (non-critical): {e}")
 
-    # Schedule as background task - don't wait
+    # For SQLite dev: create all tables directly if they don't exist
     try:
-        asyncio.create_task(background_initialization())
+        from app.models.base import Base
+        from app.db.session import engine
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("✓ Database tables verified/created")
     except Exception as e:
-        logger.warning(f"Could not schedule background task: {e}")
+        logger.warning(f"Table creation check failed: {e}")
+
+    # Add is_india_job column to existing jobs tables that predate this migration
+    try:
+        from app.db.session import engine
+        from sqlalchemy import text
+        async with engine.begin() as conn:
+            if settings.database_url.startswith("sqlite"):
+                # SQLite: check via PRAGMA, add if missing
+                result = await conn.execute(text("PRAGMA table_info(jobs)"))
+                cols = {row[1] for row in result.fetchall()}
+                if "is_india_job" not in cols:
+                    await conn.execute(text(
+                        "ALTER TABLE jobs ADD COLUMN is_india_job BOOLEAN DEFAULT 0"
+                    ))
+                    logger.info("✓ Added is_india_job column to jobs table")
+            else:
+                # PostgreSQL: add column if not exists
+                await conn.execute(text(
+                    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS is_india_job BOOLEAN DEFAULT FALSE"
+                ))
+    except Exception as e:
+        logger.warning(f"is_india_job column migration (non-critical): {e}")
+
+    # Back-fill is_india_job for existing jobs from known Indian companies
+    try:
+        from app.db.session import engine
+        from app.services.india_companies import get_indian_origin_names
+        from sqlalchemy import text
+        indian_names = list(get_indian_origin_names())
+        # Escape single quotes for SQL safety (SQLite uses '' to escape ')
+        def _sql_str(s: str) -> str:
+            return "'" + s.replace("'", "''") + "'"
+        placeholders = ",".join(_sql_str(n) for n in indian_names)
+        async with engine.begin() as conn:
+            result = await conn.execute(text(
+                f"UPDATE jobs SET is_india_job=1 "
+                f"WHERE (is_india_job IS NULL OR is_india_job=0) "
+                f"AND LOWER(company_name) IN ({placeholders})"
+            ))
+            updated = result.rowcount if hasattr(result, "rowcount") else "?"
+            if updated:
+                logger.info(f"✓ Back-filled is_india_job=1 for {updated} historical Indian company jobs")
+    except Exception as e:
+        logger.warning(f"is_india_job back-fill (non-critical): {e}")
 
 
 @app.middleware("http")
@@ -126,6 +204,53 @@ async def test_reload():
     return {"message": "Server reloaded successfully", "admin_loaded": "yes"}
 
 
+@app.get("/api/scheduler/status")
+async def scheduler_status():
+    """Return running status and next fire times for all schedulers."""
+    from apscheduler.schedulers.base import STATE_RUNNING
+    status = {}
+    try:
+        if _email_scheduler and _email_scheduler.scheduler.state == STATE_RUNNING:
+            job = _email_scheduler.scheduler.get_job("daily_email_digest")
+            status["email_scheduler"] = {
+                "running": True,
+                "next_run": str(job.next_run_time) if job else None,
+                "timezone": "Asia/Kolkata",
+                "schedule": "07:00 IST daily",
+            }
+        else:
+            status["email_scheduler"] = {"running": False}
+    except Exception as e:
+        status["email_scheduler"] = {"running": False, "error": str(e)}
+    try:
+        if _job_scheduler and _job_scheduler.scheduler.state == STATE_RUNNING:
+            job = _job_scheduler.scheduler.get_job("daily_job_scrape")
+            status["job_scheduler"] = {
+                "running": True,
+                "next_run": str(job.next_run_time) if job else None,
+                "schedule": "hourly at :00",
+            }
+        else:
+            status["job_scheduler"] = {"running": False}
+    except Exception as e:
+        status["job_scheduler"] = {"running": False, "error": str(e)}
+    return status
+
+
+@app.post("/api/scheduler/trigger")
+async def trigger_scrape_now():
+    """Manually trigger an immediate job scrape (no auth — use admin token in prod)."""
+    try:
+        if _job_scheduler:
+            import threading
+            t = threading.Thread(target=_job_scheduler.run_daily_scrape, daemon=True)
+            t.start()
+            return {"msg": "Scrape triggered", "status": "started"}
+        return {"msg": "Job scheduler not running", "status": "unavailable"}
+    except Exception as e:
+        return {"msg": f"Error: {e}", "status": "error"}
+
+
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on app shutdown."""
@@ -137,7 +262,7 @@ try:
     from app.services.daily_email_scheduler import DailyEmailScheduler
     _email_scheduler = DailyEmailScheduler()
     _email_scheduler.start()
-    logger.info("✓ Daily email scheduler initialized - emails at 6:00 AM to registered users")
+    logger.info("✓ Daily email scheduler initialized - digest at 07:00 IST (Asia/Kolkata)")
 except Exception as e:
     logger.warning(f"⚠️ Email scheduler could not start: {e}")
 
