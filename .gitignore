@@ -47,11 +47,57 @@ docker-compose.override.yml
 .DS_Store
 Thumbs.db
 
-# Test outputs
+# Test outputs / one-off scripts
 test_results*.txt
 *_test_results*.txt
+user_journey_test_results.txt
+SYSTEM_STATUS_REPORT.txt
 *.json
 !package.json
 !package-lock.json
 !tsconfig.json
 !playwright.config.json
+
+# One-off debug / seed / verify scripts in root
+check_db_counts.py
+comprehensive_feature_test.py
+create_emergency_user.py
+create_resume_entry.py
+debug_resume.py
+deploy_expanded_real_jobs.py
+deploy_real_jobs.py
+direct_generate_v2.py
+functionality_check.py
+init_db.py
+mock_api.py
+run_db_init.py
+seed_real_jobs.py
+seed_test_job.py
+trigger_embeddings.py
+upload_test_resume.py
+verify_all.py
+verify_and_trigger.py
+verify_full_features.py
+test_features.py
+test_password.sh
+test_recommendations.py
+test_recommendations_v2.py
+USER_JOURNEY_TEST.sh
+
+# Stale report docs
+BACKEND_FIXES_REPORT.md
+COMPREHENSIVE_CODEBASE_REVIEW.md
+DETAILED_FEATURE_TEST_REPORT.md
+MAIN_PY_CHANGES_REQUIRED.md
+NAVIGATION_TEST_REPORT.md
+PWA_READY_TO_DEPLOY.md
+PWA_VISUAL_GUIDE.md
+READY_TO_SHARE_WITH_RECRUITERS.md
+SET_MAIN_AS_DEFAULT.md
+VERCEL_BUILD_FIX.md
+
+# Generated/debug scripts in services/
+services/api/debug_imports.py
+services/api/generate_embeddings*.py
+services/api/api_server.log
+services/api/*.db
